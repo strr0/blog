@@ -1,0 +1,661 @@
+<!doctype html><html lang=zh-cn data-theme=light><head><meta charset=UTF-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,user-scalable=no"><title>Spring 整合 OAuth 2.0 | BLOG</title><meta name=author content="strr0"><meta name=keywords content="Java,Spring,OAuth2"><meta name=description content="OAuth 2.0 的四种角色与四种授权模式流程图解，并给出 spring-security-oauth2（旧）与 Spring Authorization Server（新）两代实现的完整落地配置，含密码模式在新版中的自定义扩展三件套与上线检查清单。"><meta name=theme-color content="#ffffff"><link rel=icon-shortcut href=/img/siteicon/favicon.ico><script>(function(){var e=localStorage.getItem("theme"),t=window.matchMedia("(prefers-color-scheme: dark)").matches,n=e||(t?"dark":"light");document.documentElement.setAttribute("data-theme",n)})()</script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/anzhiyu-theme-static@1.1.9/icon/ali_iconfont_css.css><link rel=stylesheet href=/blog/css/butterfly.min.7a222a8728f954839a16d1fb1118a695403810e72ecac48571779d5eaa11066a.css><script>var butterflyConfig={subtitleLines:'["生活明朗，万物可爱","人间值得，未来可期","欢迎来到 strr0 的小站~"]',siteStartTime:'"2022-01-04"'},postList=["/blog/posts/other/other13/","/blog/posts/other/other8/","/blog/posts/ops/ops20/","/blog/posts/ops/ops19/","/blog/posts/other/other12/","/blog/posts/other/other11/","/blog/posts/ops/ops18/","/blog/posts/ops/ops17/","/blog/posts/dev/dev17/","/blog/posts/other/other10/","/blog/posts/ops/ops16/","/blog/posts/other/other9/","/blog/posts/dev/dev16/","/blog/posts/ops/ops1/","/blog/posts/ops/ops6/","/blog/posts/ops/ops12/","/blog/posts/other/other7/","/blog/posts/other/other5/","/blog/posts/other/other6/","/blog/posts/ops/ops15/","/blog/posts/dev/dev15/","/blog/posts/dev/dev14/","/blog/posts/ops/ops14/","/blog/posts/dev/dev13/","/blog/posts/ops/ops13/","/blog/posts/dev/dev12/","/blog/posts/dev/dev11/","/blog/posts/dev/dev10/","/blog/posts/ops/ops5/","/blog/posts/dev/dev9/","/blog/posts/ops/ops11/","/blog/posts/dev/dev3/","/blog/posts/dev/dev8/","/blog/posts/dev/dev7/","/blog/posts/ops/ops10/","/blog/posts/ops/ops9/","/blog/posts/ops/ops8/","/blog/posts/ops/ops7/","/blog/posts/other/other4/","/blog/posts/dev/dev6/","/blog/posts/dev/dev5/","/blog/posts/dev/dev4/","/blog/posts/other/other3/","/blog/posts/other/other2/","/blog/posts/ops/ops4/","/blog/posts/ops/ops3/","/blog/posts/ops/ops2/","/blog/posts/other/other1/","/blog/posts/dev/dev2/","/blog/posts/aa/aa1/","/blog/posts/ode/ode1/","/blog/posts/dev/dev1/"]</script></head><body data-type=butterfly><div id=web_bg></div><div id=body-wrap class=post><header id=page-header class=post-bg><nav id=nav><span id=nav-group><span id=blog_name><a id=site-name href=/blog/ accesskey=h title=回到首页><i class="anzhiyufont anzhiyu-icon-house-chimney"></i><div class=title>BLOG</div></a></span><div id=page-name-mask><div id=page-name-container onclick=scrollToTop() title=返回顶部><span class=page-name>Spring 整合 OAuth 2.0</span></div></div><div id=menus><div class=menus_items><div class=menus_item><a class=site-page href=/blog/posts/><i class="anzhiyufont anzhiyu-icon-box-archive"></i>
+<span>文章</span></a></div><div class=menus_item><a class=site-page href=/blog/categories/><i class="anzhiyufont anzhiyu-icon-shapes"></i>
+<span>分类</span></a></div><div class=menus_item><a class=site-page href=/blog/tags/><i class="anzhiyufont anzhiyu-icon-tags"></i>
+<span>标签</span></a></div><div class=menus_item><a class=site-page href=/blog/about/><i class="anzhiyufont anzhiyu-icon-paper-plane"></i>
+<span>关于</span></a></div></div></div><div id=nav-right><div class=nav-button id=random-post-button><a class=site-page href=javascript:void(0); onclick=toRandomPost() title=随机前往一篇文章 accesskey=r><i class="anzhiyufont anzhiyu-icon-dice"></i></a></div><div class=nav-button id=search-button><a class="site-page social-icon search" href=javascript:void(0); title=站内搜索 accesskey=s><i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i>
+<span>搜索</span></a></div><div class=nav-button id=nav-totop><a class="site-page totopbtn" href=javascript:void(0); onclick=scrollToTop()><span id=percent>0</span>
+<i class="anzhiyufont anzhiyu-icon-arrow-up"></i></a></div><div id=toggle-menu><a class=site-page href=javascript:void(0); title=查看菜单><i class="anzhiyufont anzhiyu-icon-bars"></i></a></div></div></span></nav><div id=post-info><div id=post-firstinfo><div class=meta-firstline><a class=post-meta-original>原创</a>
+<span class=post-meta-categories><span class=post-meta-separator></span>
+<i class="anzhiyufont anzhiyu-icon-inbox post-meta-icon"></i>
+<a class=post-meta-categories href=/blog/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/>后端开发</a>
+</span><span class="article-meta tags"><a class=article-meta__tags href=/blog/tags/java/><span><i class="anzhiyufont anzhiyu-icon-hashtag"></i>Java</span></a>
+<a class=article-meta__tags href=/blog/tags/spring/><span><i class="anzhiyufont anzhiyu-icon-hashtag"></i>Spring</span></a>
+<a class=article-meta__tags href=/blog/tags/oauth2/><span><i class="anzhiyufont anzhiyu-icon-hashtag"></i>OAuth2</span></a></span></div></div><h1 class=post-title itemprop="name headline">Spring 整合 OAuth 2.0</h1><div id=post-meta><div class=meta-firstline><span class=post-meta-date><i class="anzhiyufont anzhiyu-icon-calendar-days post-meta-icon"></i>
+<span class=post-meta-label>发表于</span>
+<time itemprop="dateCreated datePublished" datetime=2024-12-21T23:00:00+08:00 title="发表于 2024-12-21 23:00">2024-12-21</time></span></div><div class=meta-secondline><span class=post-meta-separator></span>
+<span class=post-meta-wordcount><i class="anzhiyufont anzhiyu-icon-file-word post-meta-icon" title=文章字数></i>
+<span class=post-meta-label title=文章字数>字数:</span>
+<span class=word-count title=文章字数>2620</span>
+<span class=post-meta-separator></span>
+<i class="anzhiyufont anzhiyu-icon-clock post-meta-icon" title=阅读时长></i>
+<span class=post-meta-label title=阅读时长>阅读时长:</span>
+<span>13分</span></span></div></div></div><div id=post-top-cover><img id=post-top-bg src=/blog/img/cover2.jpg alt=封面></div></header><main id=blog-container><div id=content-inner class=layout><div id=post><article id=article-container class=post-content><header><a class=post-meta-categories href=/blog/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/>后端开发</a>
+<a class=post-tag-link href=/blog/tags/java/ tabindex=-1>Java</a>
+<a class=post-tag-link href=/blog/tags/spring/ tabindex=-1>Spring</a>
+<a class=post-tag-link href=/blog/tags/oauth2/ tabindex=-1>OAuth2</a><h1 id=CrawlerTitle>Spring 整合 OAuth 2.0</h1><span class=post-crawler-author>strr0</span>
+<time datetime=2024-12-21T23:00:00+08:00>2024-12-21</time></header><h2 id=1-概述>1 概述</h2><p>OAuth 2.0 是一个开放授权标准：资源拥有者不必把账号密码交给第三方应用，而是由授权服务器签发一枚<strong>权限有限、时效有限</strong>的访问令牌（access token），第三方拿令牌去访问资源服务器。「不接触凭据、权限可收敛、时效可控」三点合起来，就是它相比「把你的密码抄给我」的本质改进。</p><p>本文按「协议本身 → 两代 Spring 实现」组织：</p><table><thead><tr><th style=text-align:left>章节</th><th style=text-align:left>内容</th><th style=text-align:left>现状</th></tr></thead><tbody><tr><td style=text-align:left>第 2 节</td><td style=text-align:left>角色、授权模式与流程图</td><td style=text-align:left>与实现无关，来自 RFC 6749</td></tr><tr><td style=text-align:left>3.1</td><td style=text-align:left><code>spring-security-oauth2</code>（<code>@EnableAuthorizationServer</code>）</td><td style=text-align:left>已停止维护，仅作存量项目参考</td></tr><tr><td style=text-align:left>3.2</td><td style=text-align:left>Spring Authorization Server（<code>spring-security-oauth2-authorization-server</code>）</td><td style=text-align:left>官方推荐，并自行扩展出密码模式</td></tr><tr><td style=text-align:left>第 4 节</td><td style=text-align:left>上线检查清单</td><td style=text-align:left>—</td></tr></tbody></table><h2 id=2-基础知识>2 基础知识</h2><h3 id=21-四种角色>2.1 四种角色</h3><ul><li>Resource Owner —— 资源拥有者，通常就是终端用户</li><li>Resource Server —— 资源服务器，持有受保护数据，只认令牌</li><li>Client —— 客户端，想访问资源的第三方应用</li><li>Authorization Server —— 授权服务器，负责认证用户、签发与校验令牌</li></ul><p>落到一个具体场景（「某网站用 GitHub 账号登录」）：</p><table><thead><tr><th style=text-align:left>角色</th><th style=text-align:left>对应到实际系统</th></tr></thead><tbody><tr><td style=text-align:left>Resource Owner</td><td style=text-align:left>你（GitHub 用户）</td></tr><tr><td style=text-align:left>Client</td><td style=text-align:left>那个第三方网站</td></tr><tr><td style=text-align:left>Authorization Server</td><td style=text-align:left>GitHub 的 OAuth 授权服务</td></tr><tr><td style=text-align:left>Resource Server</td><td style=text-align:left>GitHub API（<code>api.github.com</code>）</td></tr></tbody></table><p>分工的关键在于<strong>资源服务器只与授权服务器约定「怎么验令牌」</strong>，完全不参与用户认证。所以业务系统只需回答三个问题：这张令牌是不是我信任的授权服务器签发的、有没有过期、scope 够不够。</p><h3 id=22-四种授权模式>2.2 四种授权模式</h3><p>四种模式的差别只在「用户如何把授权意愿传达给授权服务器」以及「客户端如何换到令牌」，拿到 access token 之后的访问方式完全一致：</p><table><thead><tr><th style=text-align:left>模式</th><th style=text-align:left>客户端是否接触密码</th><th style=text-align:left>令牌怎么到手</th><th style=text-align:left>适用</th></tr></thead><tbody><tr><td style=text-align:left>授权码</td><td style=text-align:left>否</td><td style=text-align:left>后端用 code 换取</td><td style=text-align:left>有服务端的 Web 应用，首选</td></tr><tr><td style=text-align:left>隐式</td><td style=text-align:left>否</td><td style=text-align:left>直接出现在 URL 片段</td><td style=text-align:left>早期纯前端 SPA，已不推荐</td></tr><tr><td style=text-align:left>密码</td><td style=text-align:left><strong>是</strong></td><td style=text-align:left>直接提交用户名密码</td><td style=text-align:left>自家应用 / 遗留系统过渡</td></tr><tr><td style=text-align:left>客户端</td><td style=text-align:left>无关</td><td style=text-align:left>用自己的凭据</td><td style=text-align:left>无用户参与的机器对机器调用</td></tr></tbody></table><h4 id=221-授权码模式authorization-code>2.2.1 授权码模式（Authorization Code）</h4><p>授权流程如下（图中 User-Agent 即浏览器）</p><pre tabindex=0><code>     +----------+
+     | Resource |
+     |   Owner  |
+     |          |
+     +----------+
+          ^
+          |
+         (B)
+     +----|-----+          Client Identifier      +---------------+
+     |         -+----(A)-- &amp; Redirection URI ----&gt;|               |
+     |  User-   |                                 | Authorization |
+     |  Agent  -+----(B)-- User authenticates ---&gt;|     Server    |
+     |          |                                 |               |
+     |         -+----(C)-- Authorization Code ---&lt;|               |
+     +-|----|---+                                 +---------------+
+       |    |                                         ^      v
+      (A)  (C)                                        |      |
+       |    |                                         |      |
+       ^    v                                         |      |
+     +---------+                                      |      |
+     |         |&gt;---(D)-- Authorization Code ---------&#39;      |
+     |  Client |          &amp; Redirection URI                  |
+     |         |                                             |
+     |         |&lt;---(E)----- Access Token -------------------&#39;
+     +---------+       (w/ Optional Refresh Token)
+</code></pre><p>(A) 客户端通过资源拥有者的用户代理将客户端标识和重定向地址发送到授权服务器</p><p>(B) 授权服务器认证资源拥有者（用户代理）和是否同意授权</p><p>(C) 获得资源拥有者同意后，授权服务器重定向用户代理到目标地址，并带上 code</p><p>(D) 客户端将 code 及重定向地址发送到授权服务器请求 access_token</p><p>(E) 授权服务器返回 access_token 到客户端</p><p>授权码是唯一把「前端通道」和「后端通道」切开的模式：code 走浏览器（暴露在地址栏，但生命周期只有几分钟且一次性），token 走客户端后端直连授权服务器（不经过浏览器）。即便 code 泄露，没有客户端凭据也换不到 token，这就是它安全性最高的原因。</p><p>两个必须同时启用的参数：</p><ul><li><strong>PKCE（<code>S256</code>）</strong>：授权码可能被恶意 App 截获（自定义 URL Scheme 回调），客户端在 (A) 附带 <code>code_challenge</code>，在 (D) 附带 <code>code_verifier</code>，截获到 code 也换不到 token。OAuth 2.1 草案把它列为必选，移动端与 SPA 应当默认启用。</li><li><strong><code>state</code></strong>：(A) 生成随机值，(C) 回来时比对，用于防 CSRF；<code>redirect_uri</code> 必须在授权服务器上<strong>精确匹配</strong>白名单，不能做前缀匹配。</li></ul><h4 id=222-隐式模式implicit>2.2.2 隐式模式（Implicit）</h4><p>授权流程如下</p><pre tabindex=0><code>     +----------+
+     | Resource |
+     |  Owner   |
+     |          |
+     +----------+
+          ^
+          |
+         (B)
+     +----|-----+          Client Identifier     +---------------+
+     |         -+----(A)-- &amp; Redirection URI ---&gt;|               |
+     |  User-   |                                | Authorization |
+     |  Agent  -|----(B)-- User authenticates --&gt;|     Server    |
+     |          |                                |               |
+     |          |&lt;---(C)--- Redirection URI ----&lt;|               |
+     |          |          with Access Token     +---------------+
+     |          |            in Fragment
+     |          |                                +---------------+
+     |          |----(D)--- Redirection URI ----&gt;|   Web-Hosted  |
+     |          |          without Fragment      |     Client    |
+     |          |                                |    Resource   |
+     |     (F)  |&lt;---(E)------- Script ---------&lt;|               |
+     |          |                                +---------------+
+     +-|--------+
+       |    |
+      (A)  (G) Access Token
+       |    |
+       ^    v
+     +---------+
+     |         |
+     |  Client |
+     |         |
+     +---------+
+</code></pre><p>(A) 客户端通过资源拥有者的用户代理将客户端标识和重定向地址发送到授权服务器</p><p>(B) 授权服务器认证资源拥有者（用户代理）和是否同意授权</p><p>(C) 获得资源拥有者同意后，授权服务器重定向用户代理到目标地址（url 片段附带 access_token）</p><p>(D) 用户代理发送请求到资源服务器（不包含上述片段）</p><p>(E) 资源服务器返回一个带嵌入式脚本的页面（脚本能提取片段中的 access_token）</p><p>(F) 用户代理执行脚本提取 access_token</p><p>(G) 用户代理返回 access_token 到客户端</p><p>隐式模式存在的原因是「纯浏览器应用没有后端，藏不住 client_secret，也无法完成 (D)(E) 这次后端换票」。代价是 access_token 直接出现在 URL 片段里：它会留在浏览器历史中、被页面内任意脚本读取，而且<strong>没有 refresh token</strong>，过期只能让用户重新走一遍授权。今天的替代方案是 SPA 也走授权码 + PKCE（公开客户端把客户端认证方法设为 <code>ClientAuthenticationMethod.NONE</code>），隐式模式在 OAuth 2.1 草案中已被删除。</p><h4 id=223-密码模式resource-owner-password-credentials>2.2.3 密码模式（Resource Owner Password Credentials）</h4><p>授权流程如下</p><pre tabindex=0><code>     +----------+
+     | Resource |
+     |  Owner   |
+     |          |
+     +----------+
+          v
+          |    Resource Owner
+         (A) Password Credentials
+          |
+          v
+     +---------+                                  +---------------+
+     |         |&gt;--(B)---- Resource Owner -------&gt;|               |
+     |         |         Password Credentials     | Authorization |
+     | Client  |                                  |     Server    |
+     |         |&lt;--(C)---- Access Token ---------&lt;|               |
+     |         |    (w/ Optional Refresh Token)   |               |
+     +---------+                                  +---------------+
+</code></pre><p>(A) 资源拥有者向客户端提供用户名密码</p><p>(B) 客户端将从资源拥有者得到的认证信息发送到授权服务器请求 access_token</p><p>(C) 授权服务器校验认证信息，校验通过返回 access_token</p><p>密码模式只省去了一次浏览器跳转，<strong>并没有省掉风险</strong>：用户把明文密码交给了客户端，客户端因此可以冒充用户做任何 scope 允许的事，也无法启用 MFA、验证码与第三方 consent 页面。它只在两种情况下可接受——客户端与授权服务器同属一家（自家 App），或从旧的 Basic 认证迁移过来时作为过渡。OAuth 2.1 草案已经移除它，Spring Authorization Server 也从一开始就不提供内置实现，这正是 3.2.2 要自己写三件套的原因。</p><h4 id=224-客户端模式client-credentials>2.2.4 客户端模式（Client Credentials）</h4><p>授权流程如下</p><pre tabindex=0><code>     +---------+                                  +---------------+
+     |         |                                  |               |
+     |         |&gt;--(A)- Client Authentication ---&gt;| Authorization |
+     | Client  |                                  |     Server    |
+     |         |&lt;--(B)---- Access Token ---------&lt;|               |
+     |         |                                  |               |
+     +---------+                                  +---------------+
+</code></pre><p>(A) 客户端将客户端的认证信息发送到授权服务器请求 access_token</p><p>(B) 授权服务器校验认证信息，校验通过返回 access_token</p><p>客户端模式没有资源拥有者参与，客户端以自己的身份取令牌，拿到的权限是「这个应用能看到的范围」而不是「某个用户授权的范围」。定时任务、服务间调用、对接开放平台属于它的典型场景。由于凭据在每次换票时都要用，client_secret 必须只存在于服务端配置或密钥系统中，绝不能打包进前端或客户端安装包。</p><h3 id=23-令牌的两种形态>2.3 令牌的两种形态</h3><p>上面四种模式解决的是「怎么拿到令牌」，而「令牌长什么样」是一个独立的维度，它直接决定了后面的验签、注销与扩容方案：</p><table><thead><tr><th style=text-align:left>形态</th><th style=text-align:left>内容</th><th style=text-align:left>资源端怎么验</th><th style=text-align:left>能否主动失效</th></tr></thead><tbody><tr><td style=text-align:left>JWT（自包含）</td><td style=text-align:left>header.payload.signature，权限与用户信息写在 payload 里</td><td style=text-align:left>本地用公钥验签，无需回源</td><td style=text-align:left>默认不能，需额外黑名单</td></tr><tr><td style=text-align:left>Opaque（引用令牌）</td><td style=text-align:left>一串无意义随机字符，服务端存着它的元数据</td><td style=text-align:left>必须调 introspection 接口或查共享存储</td><td style=text-align:left>能，删记录即失效</td></tr></tbody></table><p>本文两个实现都选 JWT，所以第 3 节里反复出现的「无法主动注销」「重启后验签失败」等问题，根源都在这张表里。</p><h2 id=3-示例>3 示例</h2><h3 id=31-spring-security-oauth2-版本旧已停止维护>3.1 spring-security-oauth2 版本（旧，已停止维护）</h3><p><code>spring-security-oauth2</code> 提供 <code>@EnableAuthorizationServer</code>、<code>JwtAccessTokenConverter</code> 这类注解与工具，写法集中、上手快。但这条线在 2022 年就随 Spring Security 5.8 一起进入 EOL，<code>WebSecurityConfigurerAdapter</code> 也在 Security 5.7 被标记废弃、6.0 直接删除，因此新项目不要再选它。留这一段是为了读懂存量代码，并把它与新版做概念对照。</p><h4 id=311-依赖>3.1.1 依赖</h4><p>boot 版</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.security.oauth<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-security-oauth2<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;version&gt;</span>2.5.2.RELEASE<span style=color:#f92672>&lt;/version&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.security<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-security-jwt<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;version&gt;</span>1.1.1.RELEASE<span style=color:#f92672>&lt;/version&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>cloud 版</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-oauth2<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;version&gt;</span>2.2.5.RELEASE<span style=color:#f92672>&lt;/version&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><h4 id=312-配置>3.1.2 配置</h4><p>四个配置类各司其职：<code>WebSecurityConfig</code> 管「谁能登录」，<code>AuthorizationServerConfig</code> 管「允许哪些客户端、用哪几种模式、怎么换票」，<code>JwtConfig</code> 管「令牌长什么样、怎么签发与解析」，<code>ResourceServerConfig</code> 管「哪些接口需要什么角色」。</p><p>Security 配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Configuration</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>WebSecurityConfig</span> <span style=color:#66d9ef>extends</span> WebSecurityConfigurerAdapter {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> AuthenticationManager <span style=color:#a6e22e>authenticationManagerBean</span>() <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>super</span>.<span style=color:#a6e22e>authenticationManagerBean</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>configure</span>(AuthenticationManagerBuilder auth) <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        auth.<span style=color:#a6e22e>inMemoryAuthentication</span>()
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>withUser</span>(<span style=color:#e6db74>&#34;user&#34;</span>).<span style=color:#a6e22e>password</span>(<span style=color:#e6db74>&#34;password&#34;</span>).<span style=color:#a6e22e>roles</span>(<span style=color:#e6db74>&#34;USER&#34;</span>)
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>and</span>()
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>withUser</span>(<span style=color:#e6db74>&#34;admin&#34;</span>).<span style=color:#a6e22e>password</span>(<span style=color:#e6db74>&#34;password&#34;</span>).<span style=color:#a6e22e>roles</span>(<span style=color:#e6db74>&#34;USER&#34;</span>, <span style=color:#e6db74>&#34;ADMIN&#34;</span>);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> PasswordEncoder <span style=color:#a6e22e>passwordEncoder</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> NoOpPasswordEncoder.<span style=color:#a6e22e>getInstance</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><blockquote><p>这段里 <code>passwordEncoder()</code> Bean 与 <code>auth.inMemoryAuthentication().password("password")</code> 并不作用在同一条链上：<code>configure(AuthenticationManagerBuilder auth)</code> 显式构建的构建器默认用 <code>PasswordEncoderFactories</code> 产生的 <code>DelegatingPasswordEncoder</code>，它按 <code>{id}rawPassword</code> 前缀分派，遇到裸明文会报 <code>There is no PasswordEncoder mapped for the id "null"</code>。两种改法任选其一：<code>.password("{noop}password")</code>，或 <code>auth.inMemoryAuthentication().passwordEncoder(NoOpPasswordEncoder.getInstance())</code>。下面 <code>withClient("client").secret("secret")</code> 走的是授权服务器另一套编码器，同理需要 <code>{noop}</code> 前缀或显式配置 <code>AuthorizationServerSecurityConfigurer#passwordEncoder</code>。明文只适合演示，生产必须换 <code>BCryptPasswordEncoder</code>。</p></blockquote><p>授权服务器配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Configuration</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@EnableAuthorizationServer</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>AuthorizationServerConfig</span> <span style=color:#66d9ef>extends</span> AuthorizationServerConfigurerAdapter {
+</span></span><span style=display:flex><span>    <span style=color:#75715e>//...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>configure</span>(ClientDetailsServiceConfigurer clients) <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        clients.<span style=color:#a6e22e>inMemory</span>()
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>withClient</span>(<span style=color:#e6db74>&#34;client&#34;</span>)
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>secret</span>(<span style=color:#e6db74>&#34;secret&#34;</span>)
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>authorizedGrantTypes</span>(<span style=color:#e6db74>&#34;password&#34;</span>, <span style=color:#e6db74>&#34;refresh_token&#34;</span>)
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>scopes</span>(<span style=color:#e6db74>&#34;read&#34;</span>, <span style=color:#e6db74>&#34;write&#34;</span>);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>configure</span>(AuthorizationServerEndpointsConfigurer endpoints) <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        TokenEnhancerChain tokenEnhancerChain <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> TokenEnhancerChain();
+</span></span><span style=display:flex><span>        tokenEnhancerChain.<span style=color:#a6e22e>setTokenEnhancers</span>(Arrays.<span style=color:#a6e22e>asList</span>(jwtTokenEnhancer, jwtAccessTokenConverter));
+</span></span><span style=display:flex><span>        endpoints.<span style=color:#a6e22e>tokenStore</span>(tokenStore)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>accessTokenConverter</span>(jwtAccessTokenConverter)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>tokenEnhancer</span>(tokenEnhancerChain)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>authenticationManager</span>(authenticationManager);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>三个容易看漏的点：</p><ul><li><code>authorizedGrantTypes("password", "refresh_token")</code> 里<strong>两个值都要写</strong>。声明 <code>password</code> 只允许走密码换票；<code>refresh_token</code> 是一项<strong>独立的授权类型</strong>，不写它，即使 <code>DefaultTokenServices</code> 打开了 <code>setSupportRefreshToken(true)</code>，刷新请求仍会被拒。</li><li><code>authenticationManager(authenticationManager)</code> 是密码模式专属。授权码模式靠浏览器里的登录态，不需要程序化校验用户名密码；只有密码模式要拿上面 <code>WebSecurityConfig</code> 暴露的 <code>AuthenticationManager</code> 去验账号。</li><li><code>TokenEnhancerChain</code> 的<strong>顺序不可颠倒</strong>：<code>jwtTokenEnhancer</code> 往令牌里塞附加 claim，<code>jwtAccessTokenConverter</code> 负责把整个令牌序列化成 JWT 并签名。converter 必须放最后，否则增强器写入的字段不会被编进最终的 JWT，接口返回的 payload 里就少了 <code>username</code>。</li></ul><p>令牌配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Configuration</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>JwtConfig</span> {
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// jwt 令牌转换</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> JwtAccessTokenConverter <span style=color:#a6e22e>getJwtAccessTokenConverter</span>() {
+</span></span><span style=display:flex><span>        JwtAccessTokenConverter converter <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> JwtAccessTokenConverter();
+</span></span><span style=display:flex><span>        converter.<span style=color:#a6e22e>setSigningKey</span>(<span style=color:#e6db74>&#34;secret&#34;</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> converter;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// jwt 令牌增强</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> TokenEnhancer <span style=color:#a6e22e>getJwtTokenEnhancer</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> (token, authentication) <span style=color:#f92672>-&gt;</span> {
+</span></span><span style=display:flex><span>            Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;</span> additionalInfo <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> HashMap<span style=color:#f92672>&lt;&gt;</span>();
+</span></span><span style=display:flex><span>            additionalInfo.<span style=color:#a6e22e>put</span>(<span style=color:#e6db74>&#34;username&#34;</span>, authentication.<span style=color:#a6e22e>getPrincipal</span>());
+</span></span><span style=display:flex><span>            ((DefaultOAuth2AccessToken) token).<span style=color:#a6e22e>setAdditionalInformation</span>(additionalInfo);
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> token;
+</span></span><span style=display:flex><span>        };
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> TokenStore <span style=color:#a6e22e>getTokenStore</span>(JwtAccessTokenConverter converter) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> JwtTokenStore(converter);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> DefaultTokenServices <span style=color:#a6e22e>getTokenService</span>(TokenStore tokenStore) {
+</span></span><span style=display:flex><span>        DefaultTokenServices tokenServices <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> DefaultTokenServices();
+</span></span><span style=display:flex><span>        tokenServices.<span style=color:#a6e22e>setTokenStore</span>(tokenStore);
+</span></span><span style=display:flex><span>        tokenServices.<span style=color:#a6e22e>setSupportRefreshToken</span>(<span style=color:#66d9ef>true</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> tokenServices;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>JwtTokenStore</code> 名字里有 Store，实际<strong>什么都不存</strong>——它只做「把 <code>OAuth2AccessToken</code> 转成 JWT 字符串」和「把 JWT 解回来」两件事，令牌的全部状态都编码在签名过的 payload 里。这带来两个直接后果：</p><ul><li>授权服务器重启、扩容都不用共享会话存储，天然水平扩展；</li><li>但服务端<strong>无法主动让一张未过期的令牌失效</strong>，退出登录、封号、改密码都不能立即切断访问。</li></ul><p>想保留 JWT 又要有撤销能力，常见做法是把有效期压短（几分钟到半小时）并配合 refresh token 轮换，或者加一张以 <code>jti</code> 为键的 Redis 黑名单；也可以把 <code>JwtTokenStore</code> 换成 <code>RedisTokenStore</code>，代价是每次请求多一次 Redis 查询。另外，签名密钥写死为 <code>"secret"</code> 意味着任何拿到这个字符串的人都能自行签发令牌，且对称密钥必须分发给每一个需要验签的服务；多节点部署应改用 RSA（<code>KeyPair</code>），并把公钥通过 <code>/oauth/token_key</code> 暴露给资源端。</p><p>资源服务器配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Configuration</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@EnableResourceServer</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ResourceServerConfig</span> <span style=color:#66d9ef>extends</span> ResourceServerConfigurerAdapter {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>configure</span>(HttpSecurity http) <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        http.<span style=color:#a6e22e>authorizeRequests</span>()
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>antMatchers</span>(<span style=color:#e6db74>&#34;/hello&#34;</span>).<span style=color:#a6e22e>hasAnyRole</span>(<span style=color:#e6db74>&#34;USER&#34;</span>)
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>anyRequest</span>().<span style=color:#a6e22e>authenticated</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>hasAnyRole("USER")</code> 比对时会自动补 <code>ROLE_</code> 前缀，对应 <code>WebSecurityConfig</code> 里 <code>roles("USER")</code> 生成的 <code>ROLE_USER</code>；若想直接写全权限名，要用 <code>hasAnyAuthority()</code>。<code>authorizeRequests()</code> 与 <code>antMatchers()</code> 在 Security 5.8 起被 <code>authorizeHttpRequests()</code> / <code>requestMatchers()</code> 取代，新版写法见 3.2.3。资源端与授权端拆成两个服务时，这里还需要额外提供 <code>ResourceServerTokenServices</code>（共享 <code>TokenStore</code> Bean，或用 <code>RestTemplate</code> 调 <code>/oauth/check_token</code>），共部一个进程则直接复用上面的 Bean。</p><p>测试资源服务器</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@RestController</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>HelloController</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@GetMapping</span>(<span style=color:#e6db74>&#34;/hello&#34;</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> String <span style=color:#a6e22e>hello</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#e6db74>&#34;Hello World&#34;</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h3 id=32-spring-authorization-server-版本新官方推荐>3.2 Spring Authorization Server 版本（新，官方推荐）</h3><p>Spring Authorization Server 是按 OAuth 2.1 / OIDC 1.0 最终规范重写的实现，不再提供 <code>@EnableAuthorizationServer</code> 这种一锅端注解，而是把每个端点、每种授权类型、每个扩展点都拆成显式 Bean。代价是配置代码量大很多，好处是所有行为都能在代码里检索到。</p><p>与旧版的概念对照：</p><table><thead><tr><th style=text-align:left>旧版（spring-security-oauth2）</th><th style=text-align:left>新版（Authorization Server）</th><th style=text-align:left>说明</th></tr></thead><tbody><tr><td style=text-align:left><code>@EnableAuthorizationServer</code></td><td style=text-align:left><code>OAuth2AuthorizationServerConfigurer</code></td><td style=text-align:left>由注解开关改为 DSL 配置</td></tr><tr><td style=text-align:left><code>ClientDetails</code> / <code>ClientDetailsService</code></td><td style=text-align:left><code>RegisteredClient</code> / <code>RegisteredClientRepository</code></td><td style=text-align:left>客户端注册信息</td></tr><tr><td style=text-align:left><code>AuthorizationServerTokenServices</code> / <code>DefaultTokenServices</code></td><td style=text-align:left><code>OAuth2AuthorizationService</code></td><td style=text-align:left>授权记录（含 code、各类型 token）的存取</td></tr><tr><td style=text-align:left><code>TokenStore</code> + <code>JwtAccessTokenConverter</code></td><td style=text-align:left><code>OAuth2TokenGenerator</code> + <code>JwtEncoder</code> + <code>JWKSource</code></td><td style=text-align:left>签发与编解码拆成三个组件</td></tr><tr><td style=text-align:left><code>TokenEnhancer</code></td><td style=text-align:left><code>OAuth2TokenCustomizer&lt;JwtEncodingContext></code></td><td style=text-align:left>往 payload 里加自定义 claim</td></tr><tr><td style=text-align:left><code>/oauth/token</code></td><td style=text-align:left><code>/oauth2/token</code></td><td style=text-align:left>端点路径默认不兼容</td></tr></tbody></table><p>它内置支持的只有授权码（含 PKCE）、客户端凭据与刷新令牌，后续版本又补上了设备码与 token exchange，<strong>没有密码模式与隐式模式</strong>。所以下面先自己实现一遍密码模式。</p><h4 id=321-依赖>3.2.1 依赖</h4><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.security<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-security-oauth2-authorization-server<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;version&gt;</span>1.0.0<span style=color:#f92672>&lt;/version&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><h4 id=322-扩展密码模式>3.2.2 扩展密码模式</h4><p>密码模式在新版里要自己接三件套，顺序是「解析请求 → 构造认证对象 → 校验并签发令牌」：</p><table><thead><tr><th style=text-align:left>组件</th><th style=text-align:left>实现的接口</th><th style=text-align:left>职责</th><th style=text-align:left>注册位置</th></tr></thead><tbody><tr><td style=text-align:left><code>OAuth2ResourceOwnerAuthenticationToken</code></td><td style=text-align:left>继承 <code>AbstractAuthenticationToken</code></td><td style=text-align:left>承载 username / password / scope 的中间认证对象</td><td style=text-align:left>无需注册</td></tr><tr><td style=text-align:left><code>OAuth2ResourceOwnerAuthenticationConverter</code></td><td style=text-align:left><code>AuthenticationConverter</code></td><td style=text-align:left>从 token 请求里读参数，<code>grant_type</code> 不是 <code>password</code> 就返回 null 放行给下一个</td><td style=text-align:left><code>tokenEndpoint.accessTokenRequestConverters(...)</code></td></tr><tr><td style=text-align:left><code>OAuth2ResourceOwnerAuthenticationProvider</code></td><td style=text-align:left><code>AuthenticationProvider</code></td><td style=text-align:left>校验客户端许可、验账号、校 scope，签发 access/refresh/id token 并落库</td><td style=text-align:left><code>tokenEndpoint.authenticationProviders(...)</code></td></tr></tbody></table><p>三处缺一处的报错症状完全不同，可以直接据此定位：converter 没注册 → <code>unsupported_grant_type</code>；provider 没注册 → 同样报 <code>unsupported_grant_type</code>（没有任何 provider 支持这个认证类型）；RegisteredClient 里没加 <code>AuthorizationGrantType.PASSWORD</code> → 命中 provider 里的授权类型检查，报 <code>unauthorized_client</code>。</p><blockquote><p>两个必须提前知道的坑：一是 <code>AuthorizationGrantType</code> 是个普通类而不是枚举，官方只提供 <code>AUTHORIZATION_CODE</code>、<code>REFRESH_TOKEN</code>、<code>CLIENT_CREDENTIALS</code> 等常量，<strong>没有 <code>PASSWORD</code></strong>，需要自行 <code>new AuthorizationGrantType("password")</code> 定义一个常量（上面三件套引用的都是它）。二是代码里的 <code>OAuth2EndpointUtils</code>、<code>OAuth2AuthenticationProviderUtils</code>、<code>SpringAuthorizationServerVersion</code> 属于框架内部类，不在公开 API 里，升级随时可能改签名——从官方源码复制到自己的包里并锁死版本是常见做法，社区也有现成的密码模式扩展实现可参考。</p></blockquote><p>密码认证 token 信息</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>OAuth2ResourceOwnerAuthenticationToken</span> <span style=color:#66d9ef>extends</span> AbstractAuthenticationToken {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> <span style=color:#66d9ef>long</span> serialVersionUID <span style=color:#f92672>=</span> SpringAuthorizationServerVersion.<span style=color:#a6e22e>SERIAL_VERSION_UID</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> AuthorizationGrantType authorizationGrantType;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> Authentication clientPrincipal;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> String username;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> String password;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> Set<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> scopes;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>OAuth2ResourceOwnerAuthenticationToken</span>(AuthorizationGrantType authorizationGrantType, Authentication clientPrincipal,
+</span></span><span style=display:flex><span>                                                  <span style=color:#a6e22e>@Nullable</span> String username, <span style=color:#a6e22e>@Nullable</span> String password, <span style=color:#a6e22e>@Nullable</span> Set<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> scopes) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>super</span>(Collections.<span style=color:#a6e22e>emptyList</span>());
+</span></span><span style=display:flex><span>        Assert.<span style=color:#a6e22e>notNull</span>(authorizationGrantType, <span style=color:#e6db74>&#34;authorizationGrantType cannot be null&#34;</span>);
+</span></span><span style=display:flex><span>        Assert.<span style=color:#a6e22e>notNull</span>(clientPrincipal, <span style=color:#e6db74>&#34;clientPrincipal cannot be null&#34;</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>authorizationGrantType</span> <span style=color:#f92672>=</span> authorizationGrantType;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>clientPrincipal</span> <span style=color:#f92672>=</span> clientPrincipal;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>username</span> <span style=color:#f92672>=</span> username;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>password</span> <span style=color:#f92672>=</span> password;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>scopes</span> <span style=color:#f92672>=</span> Collections.<span style=color:#a6e22e>unmodifiableSet</span>((scopes <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>) <span style=color:#f92672>?</span> <span style=color:#66d9ef>new</span> HashSet<span style=color:#f92672>&lt;&gt;</span>(scopes) : Collections.<span style=color:#a6e22e>emptySet</span>());
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>//...</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>这个认证对象只是数据载体：<code>super(Collections.emptyList())</code> 传入空权限集合，真正的权限要到 provider 验完账号之后才由 access token 的 scope 决定。</p><p>密码认证转换器</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>OAuth2ResourceOwnerAuthenticationConverter</span> <span style=color:#66d9ef>implements</span> AuthenticationConverter {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Authentication <span style=color:#a6e22e>convert</span>(HttpServletRequest request) {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// grant_type (REQUIRED)</span>
+</span></span><span style=display:flex><span>        String grantType <span style=color:#f92672>=</span> request.<span style=color:#a6e22e>getParameter</span>(OAuth2ParameterNames.<span style=color:#a6e22e>GRANT_TYPE</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>AuthorizationGrantType.<span style=color:#a6e22e>PASSWORD</span>.<span style=color:#a6e22e>getValue</span>().<span style=color:#a6e22e>equals</span>(grantType)) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        MultiValueMap<span style=color:#f92672>&lt;</span>String, String<span style=color:#f92672>&gt;</span> parameters <span style=color:#f92672>=</span> OAuth2EndpointUtils.<span style=color:#a6e22e>getParameters</span>(request);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// username (REQUIRED)</span>
+</span></span><span style=display:flex><span>        String username <span style=color:#f92672>=</span> parameters.<span style=color:#a6e22e>getFirst</span>(OAuth2ParameterNames.<span style=color:#a6e22e>USERNAME</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>StringUtils.<span style=color:#a6e22e>hasText</span>(username) <span style=color:#f92672>||</span> parameters.<span style=color:#a6e22e>get</span>(OAuth2ParameterNames.<span style=color:#a6e22e>USERNAME</span>).<span style=color:#a6e22e>size</span>() <span style=color:#f92672>!=</span> 1) {
+</span></span><span style=display:flex><span>            OAuth2EndpointUtils.<span style=color:#a6e22e>throwError</span>(OAuth2ErrorCodes.<span style=color:#a6e22e>INVALID_REQUEST</span>, OAuth2ParameterNames.<span style=color:#a6e22e>USERNAME</span>, OAuth2EndpointUtils.<span style=color:#a6e22e>ACCESS_TOKEN_REQUEST_ERROR_URI</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// password (REQUIRED)</span>
+</span></span><span style=display:flex><span>        String password <span style=color:#f92672>=</span> parameters.<span style=color:#a6e22e>getFirst</span>(OAuth2ParameterNames.<span style=color:#a6e22e>PASSWORD</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>StringUtils.<span style=color:#a6e22e>hasText</span>(password) <span style=color:#f92672>||</span> parameters.<span style=color:#a6e22e>get</span>(OAuth2ParameterNames.<span style=color:#a6e22e>PASSWORD</span>).<span style=color:#a6e22e>size</span>() <span style=color:#f92672>!=</span> 1) {
+</span></span><span style=display:flex><span>            OAuth2EndpointUtils.<span style=color:#a6e22e>throwError</span>(OAuth2ErrorCodes.<span style=color:#a6e22e>INVALID_REQUEST</span>, OAuth2ParameterNames.<span style=color:#a6e22e>PASSWORD</span>, OAuth2EndpointUtils.<span style=color:#a6e22e>ACCESS_TOKEN_REQUEST_ERROR_URI</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// scope (OPTIONAL)</span>
+</span></span><span style=display:flex><span>        String scope <span style=color:#f92672>=</span> parameters.<span style=color:#a6e22e>getFirst</span>(OAuth2ParameterNames.<span style=color:#a6e22e>SCOPE</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (StringUtils.<span style=color:#a6e22e>hasText</span>(scope) <span style=color:#f92672>&amp;&amp;</span> parameters.<span style=color:#a6e22e>get</span>(OAuth2ParameterNames.<span style=color:#a6e22e>SCOPE</span>).<span style=color:#a6e22e>size</span>() <span style=color:#f92672>!=</span> 1) {
+</span></span><span style=display:flex><span>            OAuth2EndpointUtils.<span style=color:#a6e22e>throwError</span>(OAuth2ErrorCodes.<span style=color:#a6e22e>INVALID_REQUEST</span>, OAuth2ParameterNames.<span style=color:#a6e22e>SCOPE</span>,
+</span></span><span style=display:flex><span>                    OAuth2EndpointUtils.<span style=color:#a6e22e>ACCESS_TOKEN_REQUEST_ERROR_URI</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        Set<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> scopes <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (StringUtils.<span style=color:#a6e22e>hasText</span>(scope)) {
+</span></span><span style=display:flex><span>            scopes <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> HashSet<span style=color:#f92672>&lt;&gt;</span>(Arrays.<span style=color:#a6e22e>asList</span>(StringUtils.<span style=color:#a6e22e>delimitedListToStringArray</span>(scope, <span style=color:#e6db74>&#34; &#34;</span>)));
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 用于获取 client</span>
+</span></span><span style=display:flex><span>        Authentication clientPrincipal <span style=color:#f92672>=</span> SecurityContextHolder.<span style=color:#a6e22e>getContext</span>().<span style=color:#a6e22e>getAuthentication</span>();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (clientPrincipal <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>            OAuth2EndpointUtils.<span style=color:#a6e22e>throwError</span>(OAuth2ErrorCodes.<span style=color:#a6e22e>INVALID_REQUEST</span>, OAuth2ErrorCodes.<span style=color:#a6e22e>INVALID_CLIENT</span>,
+</span></span><span style=display:flex><span>                    OAuth2EndpointUtils.<span style=color:#a6e22e>ACCESS_TOKEN_REQUEST_ERROR_URI</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> OAuth2ResourceOwnerAuthenticationToken(AuthorizationGrantType.<span style=color:#a6e22e>PASSWORD</span>, clientPrincipal, username, password, scopes);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>convert() 返回 null 而不是抛异常，是这套 SPI 的约定：转换器链会依次询问，不匹配就交给下一个。这里能从 <code>SecurityContextHolder</code> 里拿到 client 主体，是因为客户端认证（Basic 或 POST）在进入 token 端点前已经由 clientAuthentication 链完成。每个参数都校验 <code>parameters.get(...).size() != 1</code>，目的是拒绝重复参数（RFC 6749 要求每个参数只能出现一次）。</p><p>密码认证处理</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>OAuth2ResourceOwnerAuthenticationProvider</span> <span style=color:#66d9ef>implements</span> AuthenticationProvider {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> Log LOGGER <span style=color:#f92672>=</span> LogFactory.<span style=color:#a6e22e>getLog</span>(OAuth2ResourceOwnerAuthenticationProvider.<span style=color:#a6e22e>class</span>);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> String ERROR_URI <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;https://datatracker.ietf.org/doc/html/rfc6749#section-5.2&#34;</span>;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> OAuth2TokenType ID_TOKEN_TOKEN_TYPE <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> OAuth2TokenType(OidcParameterNames.<span style=color:#a6e22e>ID_TOKEN</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> AuthenticationManager authenticationManager;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> OAuth2AuthorizationService authorizationService;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> OAuth2TokenGenerator<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> OAuth2Token<span style=color:#f92672>&gt;</span> tokenGenerator;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>OAuth2ResourceOwnerAuthenticationProvider</span>(AuthenticationManager authenticationManager, OAuth2AuthorizationService authorizationService,
+</span></span><span style=display:flex><span>                                                     OAuth2TokenGenerator<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> OAuth2Token<span style=color:#f92672>&gt;</span> tokenGenerator) {
+</span></span><span style=display:flex><span>        Assert.<span style=color:#a6e22e>notNull</span>(authorizationService, <span style=color:#e6db74>&#34;authorizationService cannot be null&#34;</span>);
+</span></span><span style=display:flex><span>        Assert.<span style=color:#a6e22e>notNull</span>(tokenGenerator, <span style=color:#e6db74>&#34;tokenGenerator cannot be null&#34;</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>authenticationManager</span> <span style=color:#f92672>=</span> authenticationManager;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>authorizationService</span> <span style=color:#f92672>=</span> authorizationService;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>tokenGenerator</span> <span style=color:#f92672>=</span> tokenGenerator;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Authentication <span style=color:#a6e22e>authenticate</span>(Authentication authentication) <span style=color:#66d9ef>throws</span> AuthenticationException {
+</span></span><span style=display:flex><span>        OAuth2ResourceOwnerAuthenticationToken resourceOwnerAuthentication <span style=color:#f92672>=</span> (OAuth2ResourceOwnerAuthenticationToken) authentication;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        OAuth2ClientAuthenticationToken clientPrincipal <span style=color:#f92672>=</span> OAuth2AuthenticationProviderUtils
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>getAuthenticatedClientElseThrowInvalidClient</span>(resourceOwnerAuthentication);
+</span></span><span style=display:flex><span>        RegisteredClient registeredClient <span style=color:#f92672>=</span> clientPrincipal.<span style=color:#a6e22e>getRegisteredClient</span>();
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (LOGGER.<span style=color:#a6e22e>isTraceEnabled</span>()) {
+</span></span><span style=display:flex><span>            LOGGER.<span style=color:#a6e22e>trace</span>(<span style=color:#e6db74>&#34;Retrieved registered client&#34;</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>registeredClient.<span style=color:#a6e22e>getAuthorizationGrantTypes</span>().<span style=color:#a6e22e>contains</span>(AuthorizationGrantType.<span style=color:#a6e22e>PASSWORD</span>)) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> OAuth2AuthenticationException(OAuth2ErrorCodes.<span style=color:#a6e22e>UNAUTHORIZED_CLIENT</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        Authentication usernamePasswordAuthentication <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>try</span> {
+</span></span><span style=display:flex><span>            usernamePasswordAuthentication <span style=color:#f92672>=</span> authenticationManager.<span style=color:#a6e22e>authenticate</span>(<span style=color:#66d9ef>new</span> UsernamePasswordAuthenticationToken(resourceOwnerAuthentication.<span style=color:#a6e22e>getUsername</span>(), resourceOwnerAuthentication.<span style=color:#a6e22e>getPassword</span>()));
+</span></span><span style=display:flex><span>        } <span style=color:#66d9ef>catch</span> (AuthenticationException e) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> OAuth2AuthenticationException(OAuth2ErrorCodes.<span style=color:#a6e22e>ACCESS_DENIED</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        Set<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> authorizedScopes <span style=color:#f92672>=</span> registeredClient.<span style=color:#a6e22e>getScopes</span>();
+</span></span><span style=display:flex><span>        Set<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> requestedScopes <span style=color:#f92672>=</span> resourceOwnerAuthentication.<span style=color:#a6e22e>getScopes</span>();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>CollectionUtils.<span style=color:#a6e22e>isEmpty</span>(requestedScopes)) {
+</span></span><span style=display:flex><span>            Set<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> unauthorizedScopes <span style=color:#f92672>=</span> requestedScopes.<span style=color:#a6e22e>stream</span>().<span style=color:#a6e22e>filter</span>(scope <span style=color:#f92672>-&gt;</span> <span style=color:#f92672>!</span>authorizedScopes.<span style=color:#a6e22e>contains</span>(scope)).<span style=color:#a6e22e>collect</span>(Collectors.<span style=color:#a6e22e>toSet</span>());
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>CollectionUtils.<span style=color:#a6e22e>isEmpty</span>(unauthorizedScopes)) {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> OAuth2AuthenticationException(OAuth2ErrorCodes.<span style=color:#a6e22e>INVALID_SCOPE</span>);
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (LOGGER.<span style=color:#a6e22e>isTraceEnabled</span>()) {
+</span></span><span style=display:flex><span>            LOGGER.<span style=color:#a6e22e>trace</span>(<span style=color:#e6db74>&#34;Validated token request parameters&#34;</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// @formatter:off</span>
+</span></span><span style=display:flex><span>        DefaultOAuth2TokenContext.<span style=color:#a6e22e>Builder</span> tokenContextBuilder <span style=color:#f92672>=</span> DefaultOAuth2TokenContext.<span style=color:#a6e22e>builder</span>()
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>registeredClient</span>(registeredClient)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>principal</span>(usernamePasswordAuthentication)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>authorizationServerContext</span>(AuthorizationServerContextHolder.<span style=color:#a6e22e>getContext</span>())
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>authorizedScopes</span>(requestedScopes)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>authorizationGrantType</span>(AuthorizationGrantType.<span style=color:#a6e22e>PASSWORD</span>)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>authorizationGrant</span>(resourceOwnerAuthentication);
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// @formatter:on</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// ----- Access token -----</span>
+</span></span><span style=display:flex><span>        OAuth2TokenContext tokenContext <span style=color:#f92672>=</span> tokenContextBuilder.<span style=color:#a6e22e>tokenType</span>(OAuth2TokenType.<span style=color:#a6e22e>ACCESS_TOKEN</span>).<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>        OAuth2Token generatedAccessToken <span style=color:#f92672>=</span> <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>tokenGenerator</span>.<span style=color:#a6e22e>generate</span>(tokenContext);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (generatedAccessToken <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>            OAuth2Error error <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> OAuth2Error(OAuth2ErrorCodes.<span style=color:#a6e22e>SERVER_ERROR</span>,
+</span></span><span style=display:flex><span>                    <span style=color:#e6db74>&#34;The token generator failed to generate the access token.&#34;</span>, ERROR_URI);
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> OAuth2AuthenticationException(error);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (LOGGER.<span style=color:#a6e22e>isTraceEnabled</span>()) {
+</span></span><span style=display:flex><span>            LOGGER.<span style=color:#a6e22e>trace</span>(<span style=color:#e6db74>&#34;Generated access token&#34;</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        OAuth2AccessToken accessToken <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> OAuth2AccessToken(OAuth2AccessToken.<span style=color:#a6e22e>TokenType</span>.<span style=color:#a6e22e>BEARER</span>,
+</span></span><span style=display:flex><span>                generatedAccessToken.<span style=color:#a6e22e>getTokenValue</span>(), generatedAccessToken.<span style=color:#a6e22e>getIssuedAt</span>(),
+</span></span><span style=display:flex><span>                generatedAccessToken.<span style=color:#a6e22e>getExpiresAt</span>(), tokenContext.<span style=color:#a6e22e>getAuthorizedScopes</span>());
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// @formatter:off</span>
+</span></span><span style=display:flex><span>        OAuth2Authorization.<span style=color:#a6e22e>Builder</span> authorizationBuilder <span style=color:#f92672>=</span> OAuth2Authorization.<span style=color:#a6e22e>withRegisteredClient</span>(registeredClient)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>principalName</span>(usernamePasswordAuthentication.<span style=color:#a6e22e>getName</span>())
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>authorizationGrantType</span>(AuthorizationGrantType.<span style=color:#a6e22e>PASSWORD</span>)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>authorizedScopes</span>(authorizedScopes)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>attribute</span>(Principal.<span style=color:#a6e22e>class</span>.<span style=color:#a6e22e>getName</span>(), usernamePasswordAuthentication);
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// @formatter:on</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (generatedAccessToken <span style=color:#66d9ef>instanceof</span> ClaimAccessor claimAccessor) {
+</span></span><span style=display:flex><span>            authorizationBuilder.<span style=color:#a6e22e>token</span>(accessToken, metadata <span style=color:#f92672>-&gt;</span> metadata.<span style=color:#a6e22e>put</span>(OAuth2Authorization.<span style=color:#a6e22e>Token</span>.<span style=color:#a6e22e>CLAIMS_METADATA_NAME</span>, claimAccessor.<span style=color:#a6e22e>getClaims</span>()));
+</span></span><span style=display:flex><span>        } <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>            authorizationBuilder.<span style=color:#a6e22e>accessToken</span>(accessToken);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// ----- Refresh token -----</span>
+</span></span><span style=display:flex><span>        OAuth2RefreshToken refreshToken <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// Do not issue refresh token to public client</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (registeredClient.<span style=color:#a6e22e>getAuthorizationGrantTypes</span>().<span style=color:#a6e22e>contains</span>(AuthorizationGrantType.<span style=color:#a6e22e>REFRESH_TOKEN</span>) <span style=color:#f92672>&amp;&amp;</span>
+</span></span><span style=display:flex><span>                <span style=color:#f92672>!</span>clientPrincipal.<span style=color:#a6e22e>getClientAuthenticationMethod</span>().<span style=color:#a6e22e>equals</span>(ClientAuthenticationMethod.<span style=color:#a6e22e>NONE</span>)) {
+</span></span><span style=display:flex><span>            tokenContext <span style=color:#f92672>=</span> tokenContextBuilder.<span style=color:#a6e22e>tokenType</span>(OAuth2TokenType.<span style=color:#a6e22e>REFRESH_TOKEN</span>).<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>            OAuth2Token generatedRefreshToken <span style=color:#f92672>=</span> <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>tokenGenerator</span>.<span style=color:#a6e22e>generate</span>(tokenContext);
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> (generatedRefreshToken <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>(generatedRefreshToken <span style=color:#66d9ef>instanceof</span> OAuth2RefreshToken)) {
+</span></span><span style=display:flex><span>                    OAuth2Error error <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> OAuth2Error(OAuth2ErrorCodes.<span style=color:#a6e22e>SERVER_ERROR</span>,
+</span></span><span style=display:flex><span>                            <span style=color:#e6db74>&#34;The token generator failed to generate a valid refresh token.&#34;</span>, ERROR_URI);
+</span></span><span style=display:flex><span>                    <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> OAuth2AuthenticationException(error);
+</span></span><span style=display:flex><span>                }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>if</span> (LOGGER.<span style=color:#a6e22e>isTraceEnabled</span>()) {
+</span></span><span style=display:flex><span>                    LOGGER.<span style=color:#a6e22e>trace</span>(<span style=color:#e6db74>&#34;Generated refresh token&#34;</span>);
+</span></span><span style=display:flex><span>                }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>                refreshToken <span style=color:#f92672>=</span> (OAuth2RefreshToken) generatedRefreshToken;
+</span></span><span style=display:flex><span>                authorizationBuilder.<span style=color:#a6e22e>refreshToken</span>(refreshToken);
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// ----- ID token -----</span>
+</span></span><span style=display:flex><span>        OidcIdToken idToken;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (requestedScopes.<span style=color:#a6e22e>contains</span>(OidcScopes.<span style=color:#a6e22e>OPENID</span>)) {
+</span></span><span style=display:flex><span>            <span style=color:#75715e>// @formatter:off</span>
+</span></span><span style=display:flex><span>            tokenContext <span style=color:#f92672>=</span> tokenContextBuilder
+</span></span><span style=display:flex><span>                    .<span style=color:#a6e22e>tokenType</span>(ID_TOKEN_TOKEN_TYPE)
+</span></span><span style=display:flex><span>                    .<span style=color:#a6e22e>authorization</span>(authorizationBuilder.<span style=color:#a6e22e>build</span>())    <span style=color:#75715e>// ID token customizer may need access to the access token and/or refresh token</span>
+</span></span><span style=display:flex><span>                    .<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>            <span style=color:#75715e>// @formatter:on</span>
+</span></span><span style=display:flex><span>            OAuth2Token generatedIdToken <span style=color:#f92672>=</span> <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>tokenGenerator</span>.<span style=color:#a6e22e>generate</span>(tokenContext);
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> (<span style=color:#f92672>!</span>(generatedIdToken <span style=color:#66d9ef>instanceof</span> Jwt)) {
+</span></span><span style=display:flex><span>                OAuth2Error error <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> OAuth2Error(OAuth2ErrorCodes.<span style=color:#a6e22e>SERVER_ERROR</span>,
+</span></span><span style=display:flex><span>                        <span style=color:#e6db74>&#34;The token generator failed to generate the ID token.&#34;</span>, ERROR_URI);
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>throw</span> <span style=color:#66d9ef>new</span> OAuth2AuthenticationException(error);
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> (LOGGER.<span style=color:#a6e22e>isTraceEnabled</span>()) {
+</span></span><span style=display:flex><span>                LOGGER.<span style=color:#a6e22e>trace</span>(<span style=color:#e6db74>&#34;Generated id token&#34;</span>);
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>            idToken <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> OidcIdToken(generatedIdToken.<span style=color:#a6e22e>getTokenValue</span>(), generatedIdToken.<span style=color:#a6e22e>getIssuedAt</span>(),
+</span></span><span style=display:flex><span>                    generatedIdToken.<span style=color:#a6e22e>getExpiresAt</span>(), ((Jwt) generatedIdToken).<span style=color:#a6e22e>getClaims</span>());
+</span></span><span style=display:flex><span>            authorizationBuilder.<span style=color:#a6e22e>token</span>(idToken, metadata <span style=color:#f92672>-&gt;</span> metadata.<span style=color:#a6e22e>put</span>(OAuth2Authorization.<span style=color:#a6e22e>Token</span>.<span style=color:#a6e22e>CLAIMS_METADATA_NAME</span>, idToken.<span style=color:#a6e22e>getClaims</span>()));
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>else</span> {
+</span></span><span style=display:flex><span>            idToken <span style=color:#f92672>=</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        OAuth2Authorization authorization <span style=color:#f92672>=</span> authorizationBuilder.<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>authorizationService</span>.<span style=color:#a6e22e>save</span>(authorization);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (LOGGER.<span style=color:#a6e22e>isTraceEnabled</span>()) {
+</span></span><span style=display:flex><span>            LOGGER.<span style=color:#a6e22e>trace</span>(<span style=color:#e6db74>&#34;Saved authorization&#34;</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;</span> additionalParameters <span style=color:#f92672>=</span> Collections.<span style=color:#a6e22e>emptyMap</span>();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (idToken <span style=color:#f92672>!=</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>            additionalParameters <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> HashMap<span style=color:#f92672>&lt;&gt;</span>();
+</span></span><span style=display:flex><span>            additionalParameters.<span style=color:#a6e22e>put</span>(OidcParameterNames.<span style=color:#a6e22e>ID_TOKEN</span>, idToken.<span style=color:#a6e22e>getTokenValue</span>());
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (LOGGER.<span style=color:#a6e22e>isTraceEnabled</span>()) {
+</span></span><span style=display:flex><span>            LOGGER.<span style=color:#a6e22e>trace</span>(<span style=color:#e6db74>&#34;Authenticated token request&#34;</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> OAuth2AccessTokenAuthenticationToken(registeredClient, clientPrincipal, accessToken, refreshToken, additionalParameters);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>boolean</span> <span style=color:#a6e22e>supports</span>(Class<span style=color:#f92672>&lt;?&gt;</span> authentication) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> OAuth2ResourceOwnerAuthenticationToken.<span style=color:#a6e22e>class</span>.<span style=color:#a6e22e>isAssignableFrom</span>(authentication);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>provider 的骨架就是五步：① 取 <code>RegisteredClient</code> 并确认它允许 <code>PASSWORD</code>；② 用 <code>authenticationManager</code> 验账号密码（这一步才是真正校验用户身份）；③ 校验请求 scope 是否全部在注册范围内；④ 依次生成 access / refresh / id token；⑤ <code>authorizationService.save(authorization)</code> 落库并返回 <code>OAuth2AccessTokenAuthenticationToken</code>。几个细节：</p><ul><li>账号验错时抛的是 <code>OAuth2ErrorCodes.ACCESS_DENIED</code>（映射为 <code>access_denied</code>），而不是常见的 <code>invalid_grant</code>；前端要把它归入统一的「账号或密码错误」提示。</li><li>refresh token 的签发条件是「客户端注册了 <code>REFRESH_TOKEN</code> 授权类型」且「客户端认证方式不是 <code>NONE</code>」——公开客户端拿不到 refresh token，这是 OAuth 2.1 的硬性要求。</li><li>只有 <code>requestedScopes</code> 里含 <code>openid</code> 才会生成 id token，走的是 OIDC 那套流程。</li><li><strong><code>authorizedScopes</code> 与 <code>requestedScopes</code> 用混了</strong>：构建 tokenContext 时传的是 <code>requestedScopes</code>，而 <code>authorizationBuilder.authorizedScopes(...)</code> 存的是 <code>registeredClient.getScopes()</code>。请求不带 scope 时 <code>requestedScopes</code> 为 null，签出的 JWT 里 <code>scope</code> claim 为空，而授权记录里存的却是客户端的全部 scope。生产上应以「请求 scope 与注册 scope 的交集」为准，两处保持统一。</li></ul><h4 id=323-配置>3.2.3 配置</h4><p>新版没有“一个注解开启授权服务器”，而是把安全链拆成<strong>两条</strong>：一条负责协议端点（<code>/oauth2/authorize</code>、<code>/oauth2/token</code>、<code>/oauth2/jwks</code> 等），一条负责普通业务接口。两条链靠 <code>securityMatcher</code> 区分，匹配优先级由 <code>@Order</code> 或 Bean 顺序决定。</p><p>Security 配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Configuration</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>WebSecurityConfig</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> UserDetailsService <span style=color:#a6e22e>userDetailsService</span>() {
+</span></span><span style=display:flex><span>        UserDetails user <span style=color:#f92672>=</span> User.<span style=color:#a6e22e>builder</span>().<span style=color:#a6e22e>username</span>(<span style=color:#e6db74>&#34;user&#34;</span>).<span style=color:#a6e22e>password</span>(<span style=color:#e6db74>&#34;password&#34;</span>).<span style=color:#a6e22e>roles</span>(<span style=color:#e6db74>&#34;USER&#34;</span>).<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>        UserDetails admin <span style=color:#f92672>=</span> User.<span style=color:#a6e22e>builder</span>().<span style=color:#a6e22e>username</span>(<span style=color:#e6db74>&#34;admin&#34;</span>).<span style=color:#a6e22e>password</span>(<span style=color:#e6db74>&#34;password&#34;</span>).<span style=color:#a6e22e>roles</span>(<span style=color:#e6db74>&#34;USER&#34;</span>, <span style=color:#e6db74>&#34;ADMIN&#34;</span>).<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> InMemoryUserDetailsManager(user, admin);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> PasswordEncoder <span style=color:#a6e22e>passwordEncoder</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> NoOpPasswordEncoder.<span style=color:#a6e22e>getInstance</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>注意与旧版的差异：这里同样是明文密码 + <code>NoOpPasswordEncoder</code>，但能跑通——因为 <code>authenticationManager</code> 来自 <code>AuthenticationConfiguration</code>，它会自动拾取容器里的 <code>PasswordEncoder</code> Bean；而旧版是在 <code>configure(AuthenticationManagerBuilder auth)</code> 里显式构建的，默认用 <code>DelegatingPasswordEncoder</code>，所以才需要 <code>{noop}</code> 前缀。客户端凭据走的是另一套：<code>RegisteredClient</code> 里的 <code>$2a$10$…</code> 前缀说明它按 bcrypt 存储，框架会按前缀分派到 <code>BCryptPasswordEncoder</code>。上线时两处都要换成 bcrypt，并删除 <code>NoOpPasswordEncoder</code> Bean。</p><p>授权服务器配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Configuration</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>AuthorizationServerConfig</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> Long ACCESS_TIMEOUT <span style=color:#f92672>=</span> 3600L;
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>final</span> Long REFRESH_TIMEOUT <span style=color:#f92672>=</span> 604800L;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>/**
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * A Spring Security filter chain for the Protocol Endpoints.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     */</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> SecurityFilterChain <span style=color:#a6e22e>authorizationServerSecurityFilterChain</span>(HttpSecurity http, OAuth2TokenGenerator<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> OAuth2Token<span style=color:#f92672>&gt;</span> tokenGenerator,
+</span></span><span style=display:flex><span>                                                                      AuthenticationManager authenticationManager, OAuth2AuthorizationService authorizationService) <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        OAuth2AuthorizationServerConfiguration.<span style=color:#a6e22e>applyDefaultSecurity</span>(http);
+</span></span><span style=display:flex><span>        http.<span style=color:#a6e22e>getConfigurer</span>(OAuth2AuthorizationServerConfigurer.<span style=color:#a6e22e>class</span>)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>tokenEndpoint</span>(tokenEndpoint <span style=color:#f92672>-&gt;</span> {
+</span></span><span style=display:flex><span>                    tokenEndpoint.<span style=color:#a6e22e>accessTokenRequestConverters</span>(converters <span style=color:#f92672>-&gt;</span> {
+</span></span><span style=display:flex><span>                        converters.<span style=color:#a6e22e>add</span>(<span style=color:#66d9ef>new</span> OAuth2AuthorizationCodeAuthenticationConverter());
+</span></span><span style=display:flex><span>                        converters.<span style=color:#a6e22e>add</span>(<span style=color:#66d9ef>new</span> OAuth2RefreshTokenAuthenticationConverter());
+</span></span><span style=display:flex><span>                        converters.<span style=color:#a6e22e>add</span>(<span style=color:#66d9ef>new</span> OAuth2ClientCredentialsAuthenticationConverter());
+</span></span><span style=display:flex><span>                        converters.<span style=color:#a6e22e>add</span>(<span style=color:#66d9ef>new</span> OAuth2ResourceOwnerAuthenticationConverter());  <span style=color:#75715e>// 密码认证转换器</span>
+</span></span><span style=display:flex><span>                    })
+</span></span><span style=display:flex><span>                    .<span style=color:#a6e22e>authenticationProviders</span>(providers <span style=color:#f92672>-&gt;</span> {
+</span></span><span style=display:flex><span>                        providers.<span style=color:#a6e22e>add</span>(<span style=color:#66d9ef>new</span> OAuth2ResourceOwnerAuthenticationProvider(authenticationManager, authorizationService, tokenGenerator));  <span style=color:#75715e>// 密码认证处理</span>
+</span></span><span style=display:flex><span>                    })
+</span></span><span style=display:flex><span>                    .<span style=color:#a6e22e>errorResponseHandler</span>((request, response, exception) <span style=color:#f92672>-&gt;</span> {
+</span></span><span style=display:flex><span>                        <span style=color:#75715e>//...</span>
+</span></span><span style=display:flex><span>                    });
+</span></span><span style=display:flex><span>                })
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>clientAuthentication</span>(configurer <span style=color:#f92672>-&gt;</span> {
+</span></span><span style=display:flex><span>                    configurer.<span style=color:#a6e22e>errorResponseHandler</span>((request, response, exception) <span style=color:#f92672>-&gt;</span> {
+</span></span><span style=display:flex><span>                        <span style=color:#75715e>//...</span>
+</span></span><span style=display:flex><span>                    });
+</span></span><span style=display:flex><span>                })
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>oidc</span>(Customizer.<span style=color:#a6e22e>withDefaults</span>())	<span style=color:#75715e>// Enable OpenID Connect 1.0</span>
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>and</span>()
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>exceptionHandling</span>(exceptions <span style=color:#f92672>-&gt;</span> {
+</span></span><span style=display:flex><span>                    exceptions.<span style=color:#a6e22e>accessDeniedHandler</span>((request, response, exception) <span style=color:#f92672>-&gt;</span> {
+</span></span><span style=display:flex><span>                        <span style=color:#75715e>//...</span>
+</span></span><span style=display:flex><span>                    });
+</span></span><span style=display:flex><span>                })
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>oauth2ResourceServer</span>(OAuth2ResourceServerConfigurer::jwt);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> http.<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>/**
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * An instance of RegisteredClientRepository for managing clients.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     */</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> RegisteredClientRepository <span style=color:#a6e22e>registeredClientRepository</span>() {
+</span></span><span style=display:flex><span>        RegisteredClient webClient <span style=color:#f92672>=</span> RegisteredClient.<span style=color:#a6e22e>withId</span>(UUID.<span style=color:#a6e22e>randomUUID</span>().<span style=color:#a6e22e>toString</span>())
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>clientId</span>(<span style=color:#e6db74>&#34;WEB_CLIENT&#34;</span>)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>clientSecret</span>(<span style=color:#e6db74>&#34;$2a$10$dnE/6hRuQHrBNQokKC5qfu/8wmhvuKAMbo8fZm5Ik7V6ZNqYPjKRi&#34;</span>)   <span style=color:#75715e>// WEB_SECRET</span>
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>clientAuthenticationMethods</span>(methods <span style=color:#f92672>-&gt;</span> {
+</span></span><span style=display:flex><span>                    methods.<span style=color:#a6e22e>add</span>(ClientAuthenticationMethod.<span style=color:#a6e22e>CLIENT_SECRET_BASIC</span>);
+</span></span><span style=display:flex><span>                    methods.<span style=color:#a6e22e>add</span>(ClientAuthenticationMethod.<span style=color:#a6e22e>CLIENT_SECRET_POST</span>);
+</span></span><span style=display:flex><span>                })
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>authorizationGrantTypes</span>(types <span style=color:#f92672>-&gt;</span> {
+</span></span><span style=display:flex><span>                    types.<span style=color:#a6e22e>add</span>(AuthorizationGrantType.<span style=color:#a6e22e>AUTHORIZATION_CODE</span>);
+</span></span><span style=display:flex><span>                    types.<span style=color:#a6e22e>add</span>(AuthorizationGrantType.<span style=color:#a6e22e>REFRESH_TOKEN</span>);
+</span></span><span style=display:flex><span>                    types.<span style=color:#a6e22e>add</span>(AuthorizationGrantType.<span style=color:#a6e22e>CLIENT_CREDENTIALS</span>);
+</span></span><span style=display:flex><span>                    types.<span style=color:#a6e22e>add</span>(AuthorizationGrantType.<span style=color:#a6e22e>PASSWORD</span>);  <span style=color:#75715e>// 密码模式</span>
+</span></span><span style=display:flex><span>                })
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>redirectUri</span>(<span style=color:#e6db74>&#34;http://127.0.0.1:8080/login/oauth2/code/default-client&#34;</span>)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>scopes</span>(scopes <span style=color:#f92672>-&gt;</span> scopes.<span style=color:#a6e22e>add</span>(<span style=color:#e6db74>&#34;web&#34;</span>))
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>tokenSettings</span>(TokenSettings.<span style=color:#a6e22e>builder</span>()
+</span></span><span style=display:flex><span>                        .<span style=color:#a6e22e>accessTokenTimeToLive</span>(Duration.<span style=color:#a6e22e>ofSeconds</span>(ACCESS_TIMEOUT))
+</span></span><span style=display:flex><span>                        .<span style=color:#a6e22e>refreshTokenTimeToLive</span>(Duration.<span style=color:#a6e22e>ofSeconds</span>(REFRESH_TIMEOUT))
+</span></span><span style=display:flex><span>                        .<span style=color:#a6e22e>build</span>())
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> InMemoryRegisteredClientRepository(webClient);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> OAuth2AuthorizationService <span style=color:#a6e22e>authorizationService</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> InMemoryOAuth2AuthorizationService();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> AuthenticationManager <span style=color:#a6e22e>authenticationManager</span>(AuthenticationConfiguration configuration) <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> configuration.<span style=color:#a6e22e>getAuthenticationManager</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>/**
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * An instance of AuthorizationServerSettings to configure Spring Authorization Server.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     */</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> AuthorizationServerSettings <span style=color:#a6e22e>authorizationServerSettings</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> AuthorizationServerSettings.<span style=color:#a6e22e>builder</span>().<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>/**
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * An instance of com.nimbusds.jose.jwk.source.JWKSource for signing access tokens.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     */</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> JWKSource<span style=color:#f92672>&lt;</span>SecurityContext<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>jwkSource</span>() {
+</span></span><span style=display:flex><span>        RSAKey rsaKey <span style=color:#f92672>=</span> Jwks.<span style=color:#a6e22e>generateRsa</span>();
+</span></span><span style=display:flex><span>        JWKSet jwkSet <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> JWKSet(rsaKey);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> (jwkSelector, securityContext) <span style=color:#f92672>-&gt;</span> jwkSelector.<span style=color:#a6e22e>select</span>(jwkSet);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>/**
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * An instance of JwtDecoder for decoding signed access tokens.
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     */</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> JwtDecoder <span style=color:#a6e22e>jwtDecoder</span>(JWKSource<span style=color:#f92672>&lt;</span>SecurityContext<span style=color:#f92672>&gt;</span> jwkSource) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> OAuth2AuthorizationServerConfiguration.<span style=color:#a6e22e>jwtDecoder</span>(jwkSource);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>/**
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     * 自定义jwt
+</span></span></span><span style=display:flex><span><span style=color:#75715e>     */</span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> OAuth2TokenCustomizer<span style=color:#f92672>&lt;</span>JwtEncodingContext<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>oAuth2TokenCustomizer</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> context <span style=color:#f92672>-&gt;</span> {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> (context.<span style=color:#a6e22e>getPrincipal</span>().<span style=color:#a6e22e>getPrincipal</span>() <span style=color:#66d9ef>instanceof</span> SysUserDetails user) {
+</span></span><span style=display:flex><span>                JwtClaimsSet.<span style=color:#a6e22e>Builder</span> claims <span style=color:#f92672>=</span> context.<span style=color:#a6e22e>getClaims</span>();
+</span></span><span style=display:flex><span>                claims.<span style=color:#a6e22e>claim</span>(<span style=color:#e6db74>&#34;userId&#34;</span>, user.<span style=color:#a6e22e>getId</span>());
+</span></span><span style=display:flex><span>                claims.<span style=color:#a6e22e>claim</span>(<span style=color:#e6db74>&#34;username&#34;</span>, user.<span style=color:#a6e22e>getUsername</span>());
+</span></span><span style=display:flex><span>                claims.<span style=color:#a6e22e>claim</span>(<span style=color:#e6db74>&#34;nickname&#34;</span>, user.<span style=color:#a6e22e>getNickname</span>());
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>        };
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> OAuth2TokenGenerator<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> OAuth2Token<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>tokenGenerator</span>(JWKSource<span style=color:#f92672>&lt;</span>SecurityContext<span style=color:#f92672>&gt;</span> jwkSource, OAuth2TokenCustomizer<span style=color:#f92672>&lt;</span>JwtEncodingContext<span style=color:#f92672>&gt;</span> oAuth2TokenCustomizer) {
+</span></span><span style=display:flex><span>        JwtGenerator jwtGenerator <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> JwtGenerator(<span style=color:#66d9ef>new</span> NimbusJwtEncoder(jwkSource));
+</span></span><span style=display:flex><span>        jwtGenerator.<span style=color:#a6e22e>setJwtCustomizer</span>(oAuth2TokenCustomizer);
+</span></span><span style=display:flex><span>        OAuth2AccessTokenGenerator accessTokenGenerator <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> OAuth2AccessTokenGenerator();
+</span></span><span style=display:flex><span>        OAuth2RefreshTokenGenerator refreshTokenGenerator <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> OAuth2RefreshTokenGenerator();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> DelegatingOAuth2TokenGenerator(jwtGenerator, accessTokenGenerator, refreshTokenGenerator);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>链之外的几个 Bean 更值得逐条看：</p><ul><li><code>registeredClientRepository()</code>：<code>InMemoryRegisteredClientRepository</code> 重启即丢，生产要换 <code>JdbcRegisteredClientRepository</code>。<code>redirectUri</code> 必须精确匹配才会被接受；本文只注册了 <code>web</code> 一个 scope，测试时传别的 scope 会被拒。</li><li><code>authorizationService()</code>：<code>InMemoryOAuth2AuthorizationService</code> 存的是「已发放的授权记录」（code、access、refresh、id token 的元数据），换 <code>JdbcOAuth2AuthorizationService</code> 之前要先建好 <code>oauth2_authorization</code> 表。</li><li><code>authorizationServerSettings()</code>：全默认值意味着端点路径是 <code>/oauth2/authorize</code>、<code>/oauth2/token</code>、<code>/oauth2/jwks</code>，而 <code>issuer</code> 由请求推导。放在网关或多节点后面时必须显式 <code>.issuer("https://auth.example.com")</code> 并正确处理 <code>X-Forwarded-*</code>，否则 JWT 里的 <code>iss</code> 与 JWKS 地址会漂移，资源端验签直接失败。</li><li><code>jwkSource()</code>：<code>Jwks.generateRsa()</code> <strong>每次启动都新生成一把密钥</strong>。后果是重启后所有已签发的 JWT 全部验签失败，多节点之间也互不认账。生产要把密钥对固化（keystore 或 JWK Set 文件），并支持新旧 <code>kid</code> 并存的轮换。</li><li><code>oAuth2TokenCustomizer()</code>：<code>instanceof SysUserDetails</code> 这个判断在本文配置下<strong>永远不会命中</strong>——上面的 <code>userDetailsService()</code> 返回的是 <code>InMemoryUserDetailsManager</code>，principal 是 <code>org.springframework.security.core.userdetails.User</code>。要看到 <code>userId</code> / <code>nickname</code> 这些自定义 claim，得先接入真实的 <code>UserDetailsService</code>。它就是旧版 <code>TokenEnhancer</code> 在新版里的对应位置。</li><li><code>tokenGenerator()</code>：<code>DelegatingOAuth2TokenGenerator</code> 按「谁能处理这个 tokenType」依次询问，JWT 场景下 <code>JwtGenerator</code> 会先命中，<code>OAuth2AccessTokenGenerator</code>（签发不透明令牌）其实用不到，只保留 <code>JwtGenerator</code> + <code>OAuth2RefreshTokenGenerator</code> 更清晰。</li></ul><p>资源服务器配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Configuration</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ResourceServerConfig</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> SecurityFilterChain <span style=color:#a6e22e>resourceServerSecurityFilterChain</span>(HttpSecurity http) <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// @formatter:off</span>
+</span></span><span style=display:flex><span>        http
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>securityMatcher</span>(<span style=color:#e6db74>&#34;/**&#34;</span>)
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>authorizeHttpRequests</span>(authorize <span style=color:#f92672>-&gt;</span> authorize
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>anyRequest</span>().<span style=color:#a6e22e>authenticated</span>()
+</span></span><span style=display:flex><span>            )
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>oauth2ResourceServer</span>(oauth2ResourceServer <span style=color:#f92672>-&gt;</span> oauth2ResourceServer
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>jwt</span>(Customizer.<span style=color:#a6e22e>withDefaults</span>())
+</span></span><span style=display:flex><span>            );
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// @formatter:on</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> http.<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>资源端只需要知道「怎么验 JWT」：<code>.jwt(Customizer.withDefaults())</code> 会拾取容器里的 <code>JwtDecoder</code> Bean，而那个 decoder 是从 <code>jwkSource</code> 建出来的。授权端与资源端同进程时共享密钥没问题；拆成两个服务后，资源端应改成 <code>NimbusJwtDecoder.withJwkSetUri("http://auth-server/oauth2/jwks")</code> 或按 issuer 自动发现——<strong>资源端不应该持有签名私钥</strong>，这是两服务分离的核心意义。</p><p>权限判断上有个常被忽略的映射：JWT 里的 <code>scope</code> claim 会被 <code>JwtAuthenticationConverter</code> 转成带 <code>SCOPE_</code> 前缀的权限，所以按 scope 鉴权要写 <code>hasAuthority("SCOPE_web")</code>；而 <code>roles("USER")</code> 对应的是 <code>hasRole("USER")</code>（比对时补 <code>ROLE_</code> 前缀）。两者混用会导致 403 却看不出原因。</p><h3 id=33-测试>3.3 测试</h3><p>获取 token（Authorization Server 版本的接口为 /oauth2/token）</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-sh data-lang=sh><span style=display:flex><span>POST http://localhost:8080/oauth/token?username<span style=color:#f92672>=</span>user&amp;password<span style=color:#f92672>=</span>password&amp;grant_type<span style=color:#f92672>=</span>password&amp;scope<span style=color:#f92672>=</span>read
+</span></span><span style=display:flex><span>Accept: application/json
+</span></span><span style=display:flex><span>Authorization: Basic Y2xpZW50OnNlY3JldA<span style=color:#f92672>==</span>    <span style=color:#75715e># btoa(&#39;client:secret&#39;)</span>
+</span></span></code></pre></div><p>上面这条请求只对 3.1（旧版）成立，换成新版要同时改三样东西：</p><ul><li><strong>端点</strong>：旧版默认 <code>/oauth/token</code>，新版默认 <code>/oauth2/token</code>。</li><li><strong>凭据</strong>：<code>Y2xpZW50OnNlY3JldA==</code> 是 <code>client:secret</code> 的 Base64，对应旧版的 <code>withClient("client").secret("secret")</code>；新版的客户端是 <code>WEB_CLIENT</code> / <code>WEB_SECRET</code>，不换请求头会在客户端认证阶段就报 <code>invalid_client</code>。</li><li><strong>scope</strong>：旧版注册了 <code>read</code> / <code>write</code>，<code>scope=read</code> 合法；新版只注册了 <code>web</code>，传 <code>read</code> 会被 3.2.2 provider 的 scope 校验拦下，返回 <code>invalid_scope</code>。</li></ul><p>新版的等价写法（参数放表单而不是 URL）：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-sh data-lang=sh><span style=display:flex><span>POST http://localhost:8080/oauth2/token
+</span></span><span style=display:flex><span>Accept: application/json
+</span></span><span style=display:flex><span>Authorization: Basic V0VCX0NMSUVOVDpXRUJfU0VDUkVU    <span style=color:#75715e># btoa(&#39;WEB_CLIENT:WEB_SECRET&#39;)</span>
+</span></span><span style=display:flex><span>Content-Type: application/x-www-form-urlencoded
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>username<span style=color:#f92672>=</span>user&amp;password<span style=color:#f92672>=</span>password&amp;grant_type<span style=color:#f92672>=</span>password&amp;scope<span style=color:#f92672>=</span>web
+</span></span></code></pre></div><p>顺带说一句参数位置：示例把参数拼在 query string 上也能跑通，因为 <code>request.getParameter()</code> 对 query 和表单一视同仁；但 RFC 6749 要求用 <code>application/x-www-form-urlencoded</code> 请求体，拼在 URL 上会被访问日志与反向代理原样记录，密码类参数尤其不该出现在那里。</p><p>请求受保护的资源</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-sh data-lang=sh><span style=display:flex><span>GET http://localhost:8080/hello
+</span></span><span style=display:flex><span>Accept: application/json
+</span></span><span style=display:flex><span>Authorization: Bearer &lt;access_token&gt;
+</span></span></code></pre></div><p>这一步与版本无关：拿到 access token 后，新旧两版的资源端行为完全一致——解 JWT、验签、看 <code>exp</code>、比权限。这正是 2.1 里那句「资源服务器只与授权服务器约定怎么验令牌」的具体体现。</p><h2 id=4-上线检查清单>4 上线检查清单</h2><p>文中的代码为了可重复运行，把依赖全部换成了内存实现、把凭据写成了明文。对照下表逐项收口：</p><table><thead><tr><th style=text-align:left>项</th><th style=text-align:left>文中演示</th><th style=text-align:left>生产必须改成</th></tr></thead><tbody><tr><td style=text-align:left>用户 / 客户端存储</td><td style=text-align:left><code>InMemory*</code> 三个 Bean</td><td style=text-align:left><code>JdbcRegisteredClientRepository</code> + <code>JdbcOAuth2AuthorizationService</code>，带建表脚本</td></tr><tr><td style=text-align:left>密码与 secret</td><td style=text-align:left>明文 + <code>NoOpPasswordEncoder</code></td><td style=text-align:left><code>BCryptPasswordEncoder</code>；secret 从环境变量 / 配置中心 / KMS 注入，不进代码库</td></tr><tr><td style=text-align:left>签名密钥</td><td style=text-align:left>启动随机 RSA，旧版硬编码 <code>"secret"</code></td><td style=text-align:left>固化密钥库 + <code>kid</code> 轮换；资源端只拿公钥 / JWKS</td></tr><tr><td style=text-align:left>令牌失效</td><td style=text-align:left>无任何撤销机制</td><td style=text-align:left>短 TTL + refresh 轮换；需要立即断流时加 <code>jti</code> 黑名单或直接换 Opaque 令牌</td></tr><tr><td style=text-align:left>授权类型</td><td style=text-align:left>以密码模式为主线</td><td style=text-align:left>优先授权码 + PKCE；密码模式仅限自家应用且记录开启原因</td></tr><tr><td style=text-align:left>传输与回调</td><td style=text-align:left><code>http://localhost:8080</code></td><td style=text-align:left>全链路 HTTPS；<code>redirect_uri</code> 精确匹配，禁用通配与前缀匹配</td></tr><tr><td style=text-align:left>错误处理</td><td style=text-align:left>多处 <code>//...</code> 留空的 handler</td><td style=text-align:left>统一包装且不外泄堆栈；登录失败不区分「用户不存在」与「密码错误」</td></tr><tr><td style=text-align:left>时效</td><td style=text-align:left>access 1 小时 / refresh 7 天</td><td style=text-align:left>access 5–30 分钟；refresh 轮换 + 复用检测（旧 refresh 一用即全链回收）</td></tr><tr><td style=text-align:left>审计与端点</td><td style=text-align:left>未开启</td><td style=text-align:left>记录换票与授权日志（不落令牌原文）；按需暴露 <code>/oauth2/revoke</code>、<code>/oauth2/introspect</code> 与 JWKS</td></tr></tbody></table><h2 id=5-小结>5 小结</h2><ul><li>OAuth 2.0 只解决<strong>授权</strong>，不解决<strong>认证</strong>；要拿它做登录必须叠加 OIDC（id token），否则应使用 Sa-Token / Spring Security Session 这类应用层方案。</li><li>四种模式的差异全在「用户怎么把意愿交给授权服务器」，其中只有授权码把前端通道与后端通道切开，所以它是默认选择；隐式与密码已被 OAuth 2.1 移除。</li><li>令牌形态（JWT / Opaque）是一个与授权模式正交的决策，它决定了能不能主动注销、能不能水平扩容、资源端要不要回源。先选形态，再写配置。</li><li>旧版靠注解堆功能，新版靠 Bean 显式接线：两条 <code>SecurityFilterChain</code>、三个 <code>InMemory*</code> 存储、一个 <code>OAuth2TokenGenerator</code>。新版看着繁琐，但每一环都可单独测试与替换。</li><li>密码模式在新版要自己写「Token + Converter + Provider」三件套并在 <code>tokenEndpoint</code> 里注册两处，缺任何一环的报错信息都不同——排障时先对照 3.2.2 的那张表。</li></ul><h2 id=6-延伸阅读>6 延伸阅读</h2><ul><li>应用层框架的登录与鉴权方案（自带 OAuth 2.0 模块，但上手成本更低）：<a href=/posts/dev/dev12>基于 Sa-Token 实现单点登录</a></li><li>网关与微服务链路里怎么接令牌：<a href=/posts/dev/dev1>Spring Cloud 实战</a></li><li>做 <code>jti</code> 黑名单、分布式令牌存储时的基础设施：<a href=/posts/dev/dev3>Spring 整合 Redis</a></li></ul></article><div class=post-copyright><div class=copyright-cc-box><i class="anzhiyufont anzhiyu-icon-copyright"></i></div><div class=post-copyright__author_box><a class=post-copyright__author_img href=/blog/ title=头像><img class=post-copyright__author_img_back src=/blog/img/avatar.png alt=头像>
+<img class=post-copyright__author_img_front src=/blog/img/avatar.png alt=头像></a><div class=post-copyright__author_name>strr0</div><div class=post-copyright__author_desc>一个热爱前端与生活的博客</div></div><div class=post-copyright__post__info><a class=post-copyright__original href=/blog/posts/dev/dev16/ title=该文章为原创文章，注意版权协议>原创</a>
+<a class=post-copyright-title href=/blog/posts/dev/dev16/><span>Spring 整合 OAuth 2.0</span></a></div><div class=post-copyright__notice><span class=post-copyright-info>本博客所有文章除特别声明外，均采用 <a href=https://creativecommons.org/licenses/by/4.0/ target=_blank rel="noopener external nofollow">CC BY 4.0</a> 许可协议。转载请注明来自 <a href=https://strr0.github.io/blog/ target=_blank>BLOG</a>！</span></div></div><div class=post-tools-right><div class=tag_share><div class=post-meta__box><div class=post-meta__box__category-list><a class=post-meta__box__categoryes href=/blog/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/><span class=categoryes-punctuation><i class="anzhiyufont anzhiyu-icon-inbox"></i></span>后端开发<span class=categoryesPageCount>17</span></a></div><div class=post-meta__box__tag-list><a class=post-meta__box__tags href=/blog/tags/java/><span class=tags-punctuation><i class="anzhiyufont anzhiyu-icon-tag"></i></span>Java<span class=tagsPageCount>19</span></a>
+<a class=post-meta__box__tags href=/blog/tags/spring/><span class=tags-punctuation><i class="anzhiyufont anzhiyu-icon-tag"></i></span>Spring<span class=tagsPageCount>8</span></a>
+<a class=post-meta__box__tags href=/blog/tags/oauth2/><span class=tags-punctuation><i class="anzhiyufont anzhiyu-icon-tag"></i></span>OAuth2<span class=tagsPageCount>1</span></a></div></div></div></div><div class=relatedPosts><div class=headline><i class="anzhiyufont anzhiyu-icon-thumbs-up"></i><span>喜欢这篇文章的人也看了</span></div><div class=relatedPosts-list><div><a href=/blog/posts/dev/dev15/ title="Spring 整合 Minio"><img class=cover src=/blog/img/cover2.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-10-12</div><div class=title>Spring 整合 Minio</div></div></a></div><div><a href=/blog/posts/dev/dev10/ title="Spring 整合 Nacos"><img class=cover src=/blog/img/cover2.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-01-11</div><div class=title>Spring 整合 Nacos</div></div></a></div><div><a href=/blog/posts/dev/dev3/ title="Spring 整合 Redis"><img class=cover src=/blog/img/cover1.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2023-11-30</div><div class=title>Spring 整合 Redis</div></div></a></div><div><a href=/blog/posts/dev/dev7/ title="Spring 事件驱动"><img class=cover src=/blog/img/cover1.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2023-11-08</div><div class=title>Spring 事件驱动</div></div></a></div><div><a href=/blog/posts/dev/dev6/ title="Spring 整合 MongoDB"><img class=cover src=/blog/img/default_cover.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2023-09-20</div><div class=title>Spring 整合 MongoDB</div></div></a></div><div><a href=/blog/posts/dev/dev5/ title="Spring 整合 RabbitMQ"><img class=cover src=/blog/img/default_cover.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2023-09-19</div><div class=title>Spring 整合 RabbitMQ</div></div></a></div></div></div></div><div id=aside-content class=aside-content><div class="card-widget card-info"><div class=card-content><div class=author-info__sayhi id=author-info__sayhi onclick=changeSayHelloText()></div><div class=author-info-avatar><img class=avatar-img src=/blog/img/avatar.png alt=avatar onerror='this.onerror=null,this.src="/blog/img/friend_404.gif"'></div><div class=author-info__description>欢迎来到 strr0 的小站，相信你可以在这里找到对你有用的知识和教程。</div><div class=author-info__bottom-group><a class=author-info__bottom-group-left href=/blog/><h1 class=author-info__name>strr0</h1><div class=author-info__desc>一个热爱前端与生活的博客</div></a><div class="card-info-social-icons is-center"><a class=social-icon href=https://space.bilibili.com/271642327 title=bilibili target=_blank rel="noopener external nofollow"><i class="anzhiyufont anzhiyu-icon-bilibili"></i>
+</a><a class=social-icon href=https://github.com/strr0 title=github target=_blank rel="noopener external nofollow"><i class="anzhiyufont anzhiyu-icon-github"></i></a></div></div></div></div><script>window.authorStatusSkills=["📢 分享与热心帮助","🏠 智能家居小能手","🎨 设计开发一条龙","🤝 专修交互与设计","🏃 脚踏实地行动派","🧰 团队小组发动机"]</script><div class="card-widget card-notification"><div class=card-content><div class=item-headline><i class="anzhiyufont anzhiyu-icon-bullhorn"></i><span>公告</span></div><div class=announcement-content>欢迎来看我的博客鸭~</div></div></div><div class=sticky_layout><div class=card-widget id=card-toc><div class=item-headline><i class="anzhiyufont anzhiyu-icon-bars"></i>
+<span>文章目录</span>
+<span class=toc-percentage></span></div><div class=toc-content><nav id=TableOfContents><ul><li><a href=#1-概述>1 概述</a></li><li><a href=#2-基础知识>2 基础知识</a><ul><li><a href=#21-四种角色>2.1 四种角色</a></li><li><a href=#22-四种授权模式>2.2 四种授权模式</a></li><li><a href=#23-令牌的两种形态>2.3 令牌的两种形态</a></li></ul></li><li><a href=#3-示例>3 示例</a><ul><li><a href=#31-spring-security-oauth2-版本旧已停止维护>3.1 spring-security-oauth2 版本（旧，已停止维护）</a></li><li><a href=#32-spring-authorization-server-版本新官方推荐>3.2 Spring Authorization Server 版本（新，官方推荐）</a></li><li><a href=#33-测试>3.3 测试</a></li></ul></li><li><a href=#4-上线检查清单>4 上线检查清单</a></li><li><a href=#5-小结>5 小结</a></li><li><a href=#6-延伸阅读>6 延伸阅读</a></li></ul></nav></div></div><div class="card-widget card-recent-post"><div class=item-headline><i class="anzhiyufont anzhiyu-icon-history"></i>
+<span>最近发布</span></div><div class=aside-list><div class=aside-list-item><a class=thumbnail href=/blog/posts/other/other13/ title="NixOS 安装教程"><img src=/blog/img/default_cover.jpg alt="NixOS 安装教程"></a><div class=content><a class=title href=/blog/posts/other/other13/ title="NixOS 安装教程">NixOS 安装教程</a>
+<time datetime=2026-10-19T10:00:00+08:00 title="发表于 2026-10-19">2026-10-19</time></div></div><div class=aside-list-item><a class=thumbnail href=/blog/posts/other/other8/ title="三星 note2 刷入 PostmarketOS 系统"><img src=/blog/img/cover1.jpg alt="三星 note2 刷入 PostmarketOS 系统"></a><div class=content><a class=title href=/blog/posts/other/other8/ title="三星 note2 刷入 PostmarketOS 系统">三星 note2 刷入 PostmarketOS 系统</a>
+<time datetime=2026-09-04T10:00:00+08:00 title="发表于 2026-09-04">2026-09-04</time></div></div><div class=aside-list-item><a class=thumbnail href=/blog/posts/ops/ops20/ title="Linux 环境下 Canal 的安装与使用"><img src=/blog/img/default_cover.jpg alt="Linux 环境下 Canal 的安装与使用"></a><div class=content><a class=title href=/blog/posts/ops/ops20/ title="Linux 环境下 Canal 的安装与使用">Linux 环境下 Canal 的安装与使用</a>
+<time datetime=2025-05-27T10:00:00+08:00 title="发表于 2025-05-27">2025-05-27</time></div></div><div class=aside-list-item><a class=thumbnail href=/blog/posts/ops/ops19/ title="Linux 环境下 Hadoop 的安装与使用"><img src=/blog/img/default_cover.jpg alt="Linux 环境下 Hadoop 的安装与使用"></a><div class=content><a class=title href=/blog/posts/ops/ops19/ title="Linux 环境下 Hadoop 的安装与使用">Linux 环境下 Hadoop 的安装与使用</a>
+<time datetime=2025-05-20T15:00:00+08:00 title="发表于 2025-05-20">2025-05-20</time></div></div><div class=aside-list-item><a class=thumbnail href=/blog/posts/other/other12/ title="一加 6T 刷入 Windows 及 Linux 等系统"><img src=/blog/img/cover2.jpg alt="一加 6T 刷入 Windows 及 Linux 等系统"></a><div class=content><a class=title href=/blog/posts/other/other12/ title="一加 6T 刷入 Windows 及 Linux 等系统">一加 6T 刷入 Windows 及 Linux 等系统</a>
+<time datetime=2025-02-09T14:00:00+08:00 title="发表于 2025-02-09">2025-02-09</time></div></div></div></div></div></div></div></main><footer id=footer><div id=footer-wrap><div id=footer_deal><a class=deal_link href=https://space.bilibili.com/271642327 title=bilibili target=_blank rel=noopener><i class="anzhiyufont anzhiyu-icon-bilibili"></i>
+</a><img class=footer_mini_logo title=返回顶部 alt=返回顶部 onclick=scrollToTop() src=/blog/img/avatar.png size=50px>
+<a class=deal_link href=https://github.com/strr0 title=github target=_blank rel=noopener><i class="anzhiyufont anzhiyu-icon-github"></i></a></div></div><div id=footer-bar><div class=footer-bar-links><div class=footer-bar-left><div id=footer-bar-tips><span class=copyright>&copy;2022 - 2026 By
+<a class=footer-bar-link href=/blog/ title=strr0>strr0</a></span></div><span id=footer-type-tips>=> ️ ️已挑选52篇文章呈上，可供品读</span></div><div class=footer-bar-right><a class=footer-bar-link href=https://github.com/strr0/hugo-theme-butterfly title="Butterfly 主题文档">Butterfly 主题文档</a>
+<a class=footer-bar-link href=https://strr0.github.io title=网址导航>网址导航</a>
+<a class=footer-bar-link href=https://github.com/strr0/hugo-theme-butterfly target=_blank rel=noopener title=主题：Butterfly>主题 Butterfly</a></div></div></div></footer><div id=rightside><div class=rightside-item id=mobile-toc-button title=目录 onclick=toggleToc(this)><i class="anzhiyufont anzhiyu-icon-list-ul"></i></div><div class=rightside-item id=toggle-mode title=切换深色/浅色模式 onclick=switchTheme()><i class="anzhiyufont anzhiyu-icon-moon"></i></div><div class=rightside-item id=toTop-button title=返回顶部 onclick=scrollToTop()><i class="anzhiyufont anzhiyu-icon-arrow-up"></i></div></div><div id=local-search><div class=search-dialog><nav class=search-nav><span class=search-dialog-title>搜索</span>
+<button class=search-close-button type=button aria-label=关闭搜索框>
+<i class="anzhiyufont anzhiyu-icon-xmark"></i></button></nav><div class=search-wrap><div class=search-input-container><i class="anzhiyufont anzhiyu-icon-magnifying-glass search-icon"></i>
+<input id=search-input class=search-input type=text placeholder="输入关键字，按 Enter 搜索"></div><div class=search-tips id=search-tips><span>按 Esc 关闭</span>
+<span>·</span>
+<span>按 Ctrl/⌘ + K 打开</span></div><div id=loading-database class=search-loading><div class=search-loading-spinner></div><div class=search-loading-text>数据库加载中</div></div><div id=local-search-results></div></div></div><div id=search-mask></div></div></div><script src=/blog/js/butterfly.min.9b4a3def665bd833dd9f8b2427b58c4a290f94a81ace74f53ad390c55e576954.js defer></script><script>window.localSearchConfig={author:"strr0",path:"/blog/search.json",preload:!0,root:"https://strr0.github.io/blog/"}</script><script src=/blog/js/local-search.min.300d01cbb5d0cefbd9618be77e2e68b88d576173d6f3b00d9a9e818133c74012.js defer></script></body></html>

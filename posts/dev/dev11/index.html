@@ -1,0 +1,337 @@
+<!doctype html><html lang=zh-cn data-theme=light><head><meta charset=UTF-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,user-scalable=no"><title>Spring Batch 批处理框架 | BLOG</title><meta name=author content="strr0"><meta name=keywords content="Java,Spring Batch"><meta name=description content="Spring Batch 的核心抽象（Job / Step / Chunk / Tasklet / 并行 Flow）与一个跨库数据清洗作业实例：分区器 + 读取器 + 驼峰处理器 + JDBC 写出器，并重点分析分区并行下 reader 复用、重跑语义、逐条写入等真实问题。"><meta name=theme-color content="#ffffff"><link rel=icon-shortcut href=/img/siteicon/favicon.ico><script>(function(){var e=localStorage.getItem("theme"),t=window.matchMedia("(prefers-color-scheme: dark)").matches,n=e||(t?"dark":"light");document.documentElement.setAttribute("data-theme",n)})()</script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/anzhiyu-theme-static@1.1.9/icon/ali_iconfont_css.css><link rel=stylesheet href=/blog/css/butterfly.min.7a222a8728f954839a16d1fb1118a695403810e72ecac48571779d5eaa11066a.css><script>var butterflyConfig={subtitleLines:'["生活明朗，万物可爱","人间值得，未来可期","欢迎来到 strr0 的小站~"]',siteStartTime:'"2022-01-04"'},postList=["/blog/posts/other/other13/","/blog/posts/other/other8/","/blog/posts/ops/ops20/","/blog/posts/ops/ops19/","/blog/posts/other/other12/","/blog/posts/other/other11/","/blog/posts/ops/ops18/","/blog/posts/ops/ops17/","/blog/posts/dev/dev17/","/blog/posts/other/other10/","/blog/posts/ops/ops16/","/blog/posts/other/other9/","/blog/posts/dev/dev16/","/blog/posts/ops/ops1/","/blog/posts/ops/ops6/","/blog/posts/ops/ops12/","/blog/posts/other/other7/","/blog/posts/other/other5/","/blog/posts/other/other6/","/blog/posts/ops/ops15/","/blog/posts/dev/dev15/","/blog/posts/dev/dev14/","/blog/posts/ops/ops14/","/blog/posts/dev/dev13/","/blog/posts/ops/ops13/","/blog/posts/dev/dev12/","/blog/posts/dev/dev11/","/blog/posts/dev/dev10/","/blog/posts/ops/ops5/","/blog/posts/dev/dev9/","/blog/posts/ops/ops11/","/blog/posts/dev/dev3/","/blog/posts/dev/dev8/","/blog/posts/dev/dev7/","/blog/posts/ops/ops10/","/blog/posts/ops/ops9/","/blog/posts/ops/ops8/","/blog/posts/ops/ops7/","/blog/posts/other/other4/","/blog/posts/dev/dev6/","/blog/posts/dev/dev5/","/blog/posts/dev/dev4/","/blog/posts/other/other3/","/blog/posts/other/other2/","/blog/posts/ops/ops4/","/blog/posts/ops/ops3/","/blog/posts/ops/ops2/","/blog/posts/other/other1/","/blog/posts/dev/dev2/","/blog/posts/aa/aa1/","/blog/posts/ode/ode1/","/blog/posts/dev/dev1/"]</script></head><body data-type=butterfly><div id=web_bg></div><div id=body-wrap class=post><header id=page-header class=post-bg><nav id=nav><span id=nav-group><span id=blog_name><a id=site-name href=/blog/ accesskey=h title=回到首页><i class="anzhiyufont anzhiyu-icon-house-chimney"></i><div class=title>BLOG</div></a></span><div id=page-name-mask><div id=page-name-container onclick=scrollToTop() title=返回顶部><span class=page-name>Spring Batch 批处理框架</span></div></div><div id=menus><div class=menus_items><div class=menus_item><a class=site-page href=/blog/posts/><i class="anzhiyufont anzhiyu-icon-box-archive"></i>
+<span>文章</span></a></div><div class=menus_item><a class=site-page href=/blog/categories/><i class="anzhiyufont anzhiyu-icon-shapes"></i>
+<span>分类</span></a></div><div class=menus_item><a class=site-page href=/blog/tags/><i class="anzhiyufont anzhiyu-icon-tags"></i>
+<span>标签</span></a></div><div class=menus_item><a class=site-page href=/blog/about/><i class="anzhiyufont anzhiyu-icon-paper-plane"></i>
+<span>关于</span></a></div></div></div><div id=nav-right><div class=nav-button id=random-post-button><a class=site-page href=javascript:void(0); onclick=toRandomPost() title=随机前往一篇文章 accesskey=r><i class="anzhiyufont anzhiyu-icon-dice"></i></a></div><div class=nav-button id=search-button><a class="site-page social-icon search" href=javascript:void(0); title=站内搜索 accesskey=s><i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i>
+<span>搜索</span></a></div><div class=nav-button id=nav-totop><a class="site-page totopbtn" href=javascript:void(0); onclick=scrollToTop()><span id=percent>0</span>
+<i class="anzhiyufont anzhiyu-icon-arrow-up"></i></a></div><div id=toggle-menu><a class=site-page href=javascript:void(0); title=查看菜单><i class="anzhiyufont anzhiyu-icon-bars"></i></a></div></div></span></nav><div id=post-info><div id=post-firstinfo><div class=meta-firstline><a class=post-meta-original>原创</a>
+<span class=post-meta-categories><span class=post-meta-separator></span>
+<i class="anzhiyufont anzhiyu-icon-inbox post-meta-icon"></i>
+<a class=post-meta-categories href=/blog/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/>后端开发</a>
+</span><span class="article-meta tags"><a class=article-meta__tags href=/blog/tags/java/><span><i class="anzhiyufont anzhiyu-icon-hashtag"></i>Java</span></a>
+<a class=article-meta__tags href=/blog/tags/spring-batch/><span><i class="anzhiyufont anzhiyu-icon-hashtag"></i>Spring Batch</span></a></span></div></div><h1 class=post-title itemprop="name headline">Spring Batch 批处理框架</h1><div id=post-meta><div class=meta-firstline><span class=post-meta-date><i class="anzhiyufont anzhiyu-icon-calendar-days post-meta-icon"></i>
+<span class=post-meta-label>发表于</span>
+<time itemprop="dateCreated datePublished" datetime=2024-03-14T15:00:00+08:00 title="发表于 2024-03-14 15:00">2024-03-14</time></span></div><div class=meta-secondline><span class=post-meta-separator></span>
+<span class=post-meta-wordcount><i class="anzhiyufont anzhiyu-icon-file-word post-meta-icon" title=文章字数></i>
+<span class=post-meta-label title=文章字数>字数:</span>
+<span class=word-count title=文章字数>1097</span>
+<span class=post-meta-separator></span>
+<i class="anzhiyufont anzhiyu-icon-clock post-meta-icon" title=阅读时长></i>
+<span class=post-meta-label title=阅读时长>阅读时长:</span>
+<span>6分</span></span></div></div></div><div id=post-top-cover><img id=post-top-bg src=/blog/img/cover2.jpg alt=封面></div></header><main id=blog-container><div id=content-inner class=layout><div id=post><article id=article-container class=post-content><header><a class=post-meta-categories href=/blog/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/>后端开发</a>
+<a class=post-tag-link href=/blog/tags/java/ tabindex=-1>Java</a>
+<a class=post-tag-link href=/blog/tags/spring-batch/ tabindex=-1>Spring Batch</a><h1 id=CrawlerTitle>Spring Batch 批处理框架</h1><span class=post-crawler-author>strr0</span>
+<time datetime=2024-03-14T15:00:00+08:00>2024-03-14</time></header><h2 id=1-概述>1 概述</h2><p>Spring Batch 是一个轻量级的、完善的批处理框架，旨在帮助企业建立健壮、高效的批处理应用。Spring Batch 的核心为一个作业启动器和一个作业主体（Job），一个作业主体会包含若干个步骤（Step），一个步骤可以是 Chunk 类型或 Tasklet 类型，作业启动器用于执行定义的作业。</p><p>值得用它而不是写 <code>for</code> 循环的原因有四点：<strong>可重启</strong>（跑完一半失败不必从头再来）、<strong>可追溯</strong>（每次运行的状态都落在元数据表里）、<strong>分块事务</strong>（按 chunk 提交，而不是一整个大事务或每条一提交）、<strong>可分区并行</strong>。</p><p>代价是必须先准备元数据表。Spring Batch 依赖 <code>BATCH_JOB_INSTANCE</code>、<code>BATCH_JOB_EXECUTION</code>、<code>BATCH_JOB_EXECUTION_CONTEXT</code>、<code>BATCH_STEP_EXECUTION</code> 等表记录运行状态，官方按数据库提供了 <code>schema-mysql.sql</code>、<code>schema-postgresql.sql</code> 等脚本。Spring Boot 默认 <code>spring.batch.jdbc.initialize-schema=never</code>，需要手工建表或临时设为 <code>always</code> 让框架初始化；同时 <code>spring.batch.job.enabled=false</code> 可避免应用启动时自动跑一遍所有 Job——这个默认值在「部署即执行」的场景下很容易踩坑。</p><h2 id=2-核心概念>2 核心概念</h2><h3 id=21-job-配置>2.1 Job 配置</h3><p>可以定义 <code>JobListener</code> 在 Job 执行期间监听 Job 的执行情况：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>JobExecutionListener</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>beforeJob</span>(JobExecution jobExecution);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>afterJob</span>(JobExecution jobExecution);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Job 配置示例如下：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> Job <span style=color:#a6e22e>footballJob</span>(JobRepository jobRepository) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> JobBuilder(<span style=color:#e6db74>&#34;footballJob&#34;</span>, jobRepository)
+</span></span><span style=display:flex><span>                     .<span style=color:#a6e22e>listener</span>(sampleListener())
+</span></span><span style=display:flex><span>                     <span style=color:#75715e>//...</span>
+</span></span><span style=display:flex><span>                     .<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>afterJob</code> 拿到的是 <code>JobExecution</code>，可以从里面读 <code>getStatus()</code>、<code>getExitStatus()</code>、各 Step 的读写计数，告警与运行报表通常就挂在这里。</p><h3 id=22-step-配置>2.2 Step 配置</h3><p>可以定义 <code>StepListener</code> 在 Step 执行期间监听 Step 的执行情况：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>StepExecutionListener</span> <span style=color:#66d9ef>extends</span> StepListener {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>default</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>beforeStep</span>(StepExecution stepExecution) {
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>default</span> ExitStatus <span style=color:#a6e22e>afterStep</span>(StepExecution stepExecution) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>Step 配置示例如下：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#75715e>// chunk 类型</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> Step <span style=color:#a6e22e>sampleStep</span>(JobRepository jobRepository, 
+</span></span><span style=display:flex><span>		PlatformTransactionManager transactionManager) { 
+</span></span><span style=display:flex><span>	<span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> StepBuilder(<span style=color:#e6db74>&#34;sampleStep&#34;</span>, jobRepository)
+</span></span><span style=display:flex><span>				.<span style=color:#f92672>&lt;</span>String, String<span style=color:#f92672>&gt;</span>chunk(10, transactionManager) 
+</span></span><span style=display:flex><span>				.<span style=color:#a6e22e>reader</span>(itemReader())
+</span></span><span style=display:flex><span>				.<span style=color:#a6e22e>writer</span>(itemWriter())
+</span></span><span style=display:flex><span>				.<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// tasklet 类型</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> Step <span style=color:#a6e22e>step</span>(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> StepBuilder(<span style=color:#e6db74>&#34;step&#34;</span>, jobRepository)
+</span></span><span style=display:flex><span>    			.<span style=color:#a6e22e>tasklet</span>(myTasklet(), transactionManager)
+</span></span><span style=display:flex><span>    			.<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>两种类型的分工很明确：</p><table><thead><tr><th style=text-align:left>类型</th><th style=text-align:left>执行模型</th><th style=text-align:left>事务边界</th><th style=text-align:left>适用</th></tr></thead><tbody><tr><td style=text-align:left>Chunk</td><td style=text-align:left><code>read → process → write</code> 循环，攒满 <code>chunkSize</code> 触发一次写与提交</td><td style=text-align:left>每 chunk 一次事务</td><td style=text-align:left>大批量数据处理</td></tr><tr><td style=text-align:left>Tasklet</td><td style=text-align:left>单个方法执行一次</td><td style=text-align:left>整个 step 一次事务</td><td style=text-align:left>建目录、清理临时文件、发通知、判断分支</td></tr></tbody></table><p><code>chunk(10, transactionManager)</code> 的含义是：读 10 条处理 10 条后一次性写出并提交。这个数字要权衡——太小则 IO 与提交开销占主导，太大则失败回滚范围和内存占用随之上升。</p><h3 id=23-并行-step-配置>2.3 并行 Step 配置</h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> Job <span style=color:#a6e22e>job</span>(JobRepository jobRepository) {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> JobBuilder(<span style=color:#e6db74>&#34;job&#34;</span>, jobRepository)
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>start</span>(splitFlow())
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>next</span>(step4())
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>build</span>()        <span style=color:#75715e>//builds FlowJobBuilder instance</span>
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>build</span>();       <span style=color:#75715e>//builds Job instance</span>
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// flow1 flow2 并行</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> Flow <span style=color:#a6e22e>splitFlow</span>() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> FlowBuilder<span style=color:#f92672>&lt;</span>SimpleFlow<span style=color:#f92672>&gt;</span>(<span style=color:#e6db74>&#34;splitFlow&#34;</span>)
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>split</span>(taskExecutor())
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>add</span>(flow1(), flow2())
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> Flow <span style=color:#a6e22e>flow1</span>() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> FlowBuilder<span style=color:#f92672>&lt;</span>SimpleFlow<span style=color:#f92672>&gt;</span>(<span style=color:#e6db74>&#34;flow1&#34;</span>)
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>start</span>(step1())
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>next</span>(step2())
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> Flow <span style=color:#a6e22e>flow2</span>() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> FlowBuilder<span style=color:#f92672>&lt;</span>SimpleFlow<span style=color:#f92672>&gt;</span>(<span style=color:#e6db74>&#34;flow2&#34;</span>)
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>start</span>(step3())
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> TaskExecutor <span style=color:#a6e22e>taskExecutor</span>() {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> SimpleAsyncTaskExecutor(<span style=color:#e6db74>&#34;spring_batch&#34;</span>);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>结构是：<code>flow1</code>（step1 → step2）与 <code>flow2</code>（step3）并行执行，两条流都结束后再走 <code>step4</code>。注意 <code>.build()</code> 调了两次——第一次由 <code>FlowJobBuilder</code> 产出 <code>Job</code> 对象，这是 Flow 语法的固定收尾。</p><p><code>SimpleAsyncTaskExecutor</code> 并不复用线程，仅适合演示；生产应换成有界的线程池，并留意线程数与数据库连接池大小要匹配，否则并行度提升只会把连接池打空。</p><p>并行 Step 与下面第 3 节的**分区（Partitioning）**是两件事：并行 Step 处理的是互不相同的业务步骤，分区则是把一个 Step 的数据切成多份并行消化。</p><h3 id=24-作业执行>2.4 作业执行</h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@SpringBootTest</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>JobLauncherTest</span> {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Autowired</span>
+</span></span><span style=display:flex><span>    JobLauncher jobLauncher;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Autowired</span>
+</span></span><span style=display:flex><span>    Job job;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Test</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>test</span>() <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        jobLauncher.<span style=color:#a6e22e>run</span>(job, <span style=color:#66d9ef>new</span> JobParameters());
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>JobParameters</code> 是 Spring Batch 识别「一次运行」的唯一依据，同一个 Job 用完全相同的参数第二次运行会抛 <code>JobInstanceAlreadyCompleteException</code>。<code>new JobParameters()</code> 是空参数，所以这段代码在原样重跑时会失败。解决办法是把时间戳或日期作为参数传入：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span>JobParameters params <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> JobParametersBuilder()
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>addLong</span>(<span style=color:#e6db74>&#34;time&#34;</span>, System.<span style=color:#a6e22e>currentTimeMillis</span>())
+</span></span><span style=display:flex><span>        .<span style=color:#a6e22e>toJobParameters</span>();
+</span></span></code></pre></div><p>定时调度天然适合用「批次日期」作为参数，这样同一天重复触发会被拒绝，跨天则正常开新实例。</p><h2 id=3-实战数据清洗作业>3 实战：数据清洗作业</h2><p>目标：从 PostgreSQL 读一张表，把列名由下划线转成驼峰，再写入 MySQL，并用分区并行加速。</p><h3 id=31-项目配置>3.1 项目配置</h3><p>引入依赖：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.boot<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-boot-starter-batch<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;version&gt;</span>3.1.5<span style=color:#f92672>&lt;/version&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;exclusions&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;exclusion&gt;</span>
+</span></span><span style=display:flex><span>            <span style=color:#f92672>&lt;groupId&gt;</span>ch.qos.logback<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>            <span style=color:#f92672>&lt;artifactId&gt;</span>logback-classic<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>&lt;/exclusion&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;/exclusions&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>com.baomidou<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>dynamic-datasource-spring-boot3-starter<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;version&gt;</span>4.2.0<span style=color:#f92672>&lt;/version&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>com.mysql<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>mysql-connector-j<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;version&gt;</span>8.0.31<span style=color:#f92672>&lt;/version&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.postgresql<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>postgresql<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;version&gt;</span>42.6.0<span style=color:#f92672>&lt;/version&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.boot<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-boot-starter-test<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;version&gt;</span>3.1.5<span style=color:#f92672>&lt;/version&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;scope&gt;</span>test<span style=color:#f92672>&lt;/scope&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>排除 <code>logback-classic</code> 是为了换成项目统一的日志实现，避免两套 binding 冲突。</p><p>application 配置：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>spring</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>datasource</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>type</span>: <span style=color:#ae81ff>com.zaxxer.hikari.HikariDataSource</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>dynamic</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>primary</span>: <span style=color:#ae81ff>postgres</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>strict</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>datasource</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>mysql</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>type</span>: <span style=color:#ae81ff>${spring.datasource.type}</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>driver-class-name</span>: <span style=color:#ae81ff>com.mysql.cj.jdbc.Driver</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>url</span>: <span style=color:#ae81ff>jdbc:mysql://localhost:3306/testdb</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>username</span>: <span style=color:#ae81ff>root</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>password</span>: <span style=color:#ae81ff>password</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>postgres</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>type</span>: <span style=color:#ae81ff>${spring.datasource.type}</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>driver-class-name</span>: <span style=color:#ae81ff>org.postgresql.Driver</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>url</span>: <span style=color:#ae81ff>jdbc:postgresql://localhost:5432/postgres</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>username</span>: <span style=color:#ae81ff>postgres</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>password</span>: <span style=color:#ae81ff>password</span>
+</span></span></code></pre></div><p><code>strict: true</code> 表示找不到指定数据源就直接报错，而不是悄悄回退到 <code>primary</code>。批处理跨库写入时这种「宁错不默」的取值更安全——回退意味着数据被写进了另一个库。</p><h3 id=32-定义分区器>3.2 定义分区器</h3><p>用于将数据分成若干分区并行处理：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>JdbcRownumPartitioner</span> <span style=color:#66d9ef>implements</span> DataPartitioner {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> Long total <span style=color:#f92672>=</span> 0L;  <span style=color:#75715e>// 数据总数</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> Long pageSize <span style=color:#f92672>=</span> 5000L;  <span style=color:#75715e>// 分页大小</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>setTotal</span>(Long total) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>total</span> <span style=color:#f92672>=</span> total;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>setPageSize</span>(Long pageSize) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>pageSize</span> <span style=color:#f92672>=</span> pageSize;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Map<span style=color:#f92672>&lt;</span>String, ExecutionContext<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>partition</span>(<span style=color:#66d9ef>int</span> gridSize) {
+</span></span><span style=display:flex><span>        Map<span style=color:#f92672>&lt;</span>String, ExecutionContext<span style=color:#f92672>&gt;</span> contextMap <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> HashMap<span style=color:#f92672>&lt;&gt;</span>();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>int</span> idx <span style=color:#f92672>=</span> 0;
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>int</span> row <span style=color:#f92672>=</span> 0; row <span style=color:#f92672>&lt;</span> total; row <span style=color:#f92672>+=</span> pageSize) {
+</span></span><span style=display:flex><span>            ExecutionContext context <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ExecutionContext();
+</span></span><span style=display:flex><span>            context.<span style=color:#a6e22e>put</span>(<span style=color:#e6db74>&#34;startRow&#34;</span>, row);
+</span></span><span style=display:flex><span>            context.<span style=color:#a6e22e>put</span>(<span style=color:#e6db74>&#34;pageSize&#34;</span>, pageSize);
+</span></span><span style=display:flex><span>            contextMap.<span style=color:#a6e22e>put</span>(String.<span style=color:#a6e22e>valueOf</span>(idx<span style=color:#f92672>++</span>), context);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> contextMap;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>partition</code> 返回的 Map 是「分区名 → 该分区的 ExecutionContext」，框架会把每个 context 下发给对应的分区 Step 副本，读端再从中取 <code>startRow</code> 与 <code>pageSize</code>——这就是分区之间传递工作单元的方式。</p><p><code>gridSize</code>（并行线程数）在这里没有参与切分，分区数量完全由 <code>total / pageSize</code> 决定。数据量大时这会一次创建成百上千个分区副本，实际使用应让 <code>pageSize</code> 随 <code>gridSize</code> 调整，或者按 <code>ceil(total / gridSize)</code> 分块。</p><h3 id=33-定义读取器>3.3 定义读取器</h3><p>从指定的数据源按一定规则读取数据：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>JdbcPartitionReader</span> <span style=color:#66d9ef>extends</span> AbstractItemCountingItemStreamItemReader<span style=color:#f92672>&lt;</span>Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;&gt;</span> {
+</span></span><span style=display:flex><span>    <span style=color:#75715e>//...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>protected</span> Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>doRead</span>() <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>synchronized</span> (<span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>lock</span>) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>if</span> (results <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>||</span> results.<span style=color:#a6e22e>isEmpty</span>()) {
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>            }
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> results.<span style=color:#a6e22e>remove</span>(results.<span style=color:#a6e22e>size</span>() <span style=color:#f92672>-</span> 1);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>protected</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>doOpen</span>() <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        fetchData();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>fetchData</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (dataSource <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>||</span> script <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>||</span> executionContext <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        JdbcTemplate jdbcTemplate <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> JdbcTemplate(dataSource);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>int</span> startRow <span style=color:#f92672>=</span> executionContext.<span style=color:#a6e22e>getInt</span>(<span style=color:#e6db74>&#34;startRow&#34;</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>long</span> pageSize <span style=color:#f92672>=</span> executionContext.<span style=color:#a6e22e>getLong</span>(<span style=color:#e6db74>&#34;pageSize&#34;</span>);
+</span></span><span style=display:flex><span>        results <span style=color:#f92672>=</span> jdbcTemplate.<span style=color:#a6e22e>queryForList</span>(String.<span style=color:#a6e22e>format</span>(<span style=color:#e6db74>&#34;%s limit %d offset %d&#34;</span>, script, pageSize, startRow));
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>//...</span>
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>实现细节带来的四个后果：</p><ul><li><strong>继承 <code>AbstractItemCountingItemStreamItemReader</code> 自动获得计数与 restart 能力</strong>，代价是它要求 reader 是<strong>有状态</strong>的，<code>doOpen</code> 时才能拿到 context。</li><li><strong><code>doOpen</code> 一次性把整个分区的数据装进 <code>results</code></strong>：<code>pageSize</code> 设 5000 意味着每个分区线程持有 5000 行的 <code>Map</code>，并行度高时这是主要的内存压力来源。改成游标（<code>setFetchSize</code> + 流式 <code>ResultSet</code>）或减小 <code>pageSize</code> 更稳。</li><li><strong><code>remove(size() - 1)</code> 是倒序消费</strong>：最后一条最先被读出。如果下游依赖原始顺序（例如按时间增量），应改为 <code>remove(0)</code>（或直接用迭代器），并注意 <code>queryForList</code> 返回的列表要可变。</li><li><strong><code>limit ? offset ?</code> 用字符串拼接</strong>：数值参数没有注入风险，但这是 MySQL / PostgreSQL 方言，SQL Server、Oracle 需要改写；大 offset 分页在源库上会随深度线性变慢，按主键区间切分（<code>where id between ? and ?</code>）比 offset 更划算。</li></ul><blockquote><p>分区并行处理有可能会遇到线程安全问题，可通过使用 ThreadLocal 等方式来避免读取脏数据。</p></blockquote><p>这个问题在下一节（3.6）会更具体——根因是分区 Step 复用了同一个 reader 实例。</p><h3 id=34-定义数据处理器>3.4 定义数据处理器</h3><p>字段名称下划线转驼峰：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>CamelCaseProcessor</span> <span style=color:#66d9ef>implements</span> DataItemProcessor<span style=color:#f92672>&lt;</span>Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;</span>, Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;&gt;</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>process</span>(Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;</span> item) <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (item <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>||</span> item.<span style=color:#a6e22e>isEmpty</span>()) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;</span> out <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> HashMap<span style=color:#f92672>&lt;&gt;</span>();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> (Map.<span style=color:#a6e22e>Entry</span><span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;</span> entry : item.<span style=color:#a6e22e>entrySet</span>()) {
+</span></span><span style=display:flex><span>            out.<span style=color:#a6e22e>put</span>(StringUtils.<span style=color:#a6e22e>toCamelCase</span>(entry.<span style=color:#a6e22e>getKey</span>()), entry.<span style=color:#a6e22e>getValue</span>());
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> out;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>这一步不只是「顺手改个命名」。PostgreSQL 会把未加引号的标识符折叠为小写，<code>queryForList</code> 返回的 key 因此是 <code>test_key</code>；而写出器的 SQL 用的是命名参数 <code>:testKey</code>。<strong>处理器返回的 Map 的 key 必须与命名参数逐字对应</strong>，驼峰转换正是为了让两端对得上。</p><p>另外注意：<code>process</code> 返回 <code>null</code> 表示「丢弃该条」，它不会进入 writer 的 chunk，也不计入写条数——这里对空 Map 的处理符合预期，但如果源数据本身允许 null 值列，就不要误返回 null 而丢整行。</p><h3 id=35-定义数据输出器>3.5 定义数据输出器</h3><p>按一定规则将数据输出到指定数据源：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>JdbcBatchWriter</span> <span style=color:#66d9ef>implements</span> DataItemWriter<span style=color:#f92672>&lt;</span>Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;&gt;</span> {
+</span></span><span style=display:flex><span>    <span style=color:#75715e>//...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>write</span>(Chunk<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;&gt;</span> chunk) <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (dataSource <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span> <span style=color:#f92672>||</span> script <span style=color:#f92672>==</span> <span style=color:#66d9ef>null</span>) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        List<span style=color:#f92672>&lt;?</span> <span style=color:#66d9ef>extends</span> Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;&gt;</span> items <span style=color:#f92672>=</span> chunk.<span style=color:#a6e22e>getItems</span>();
+</span></span><span style=display:flex><span>        NamedParameterJdbcTemplate jdbcTemplate <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> NamedParameterJdbcTemplate(dataSource);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>for</span> (Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;</span> item : items) {
+</span></span><span style=display:flex><span>            jdbcTemplate.<span style=color:#a6e22e>update</span>(script, item);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>类名叫 BatchWriter，实现却是逐条 <code>update</code>——一次 chunk 会发出 N 条 SQL。批处理写场景应改用 <code>batchUpdate(script, SqlParameterSource[])</code>，让驱动合并成一次网络往返；同时 <code>new NamedParameterJdbcTemplate(dataSource)</code> 每次写都新建对象，提到字段上复用即可。</p><p>还有一点：<code>write</code> 里 <code>dataSource == null</code> 时<strong>静默返回</strong>，整块数据就这么消失了。写出失败必须抛异常，让 chunk 事务回滚并由框架记录 <code>FAILED</code>，否则「跑成功」的报表毫无意义。</p><h3 id=36-作业主体配置>3.6 作业主体配置</h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Configuration</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>JobPartitionConfig</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Autowired</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> JobRepository jobRepository;
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Autowired</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> PlatformTransactionManager transactionManager;
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Autowired</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> DynamicRoutingDataSource dataSource;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Job <span style=color:#a6e22e>job</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> JobBuilder(<span style=color:#e6db74>&#34;testJob&#34;</span>, jobRepository)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>start</span>(createPartStep())
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Step <span style=color:#a6e22e>createPartStep</span>() {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 读取器</span>
+</span></span><span style=display:flex><span>        JdbcPartitionReader reader <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> JdbcPartitionReader();
+</span></span><span style=display:flex><span>        reader.<span style=color:#a6e22e>setDataSource</span>(dataSource.<span style=color:#a6e22e>getDataSource</span>(<span style=color:#e6db74>&#34;postgres&#34;</span>));
+</span></span><span style=display:flex><span>        reader.<span style=color:#a6e22e>setScript</span>(<span style=color:#e6db74>&#34;select test_key, test_value from test_demo&#34;</span>);
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 处理器</span>
+</span></span><span style=display:flex><span>        CamelCaseProcessor processor <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> CamelCaseProcessor();
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 写出器</span>
+</span></span><span style=display:flex><span>        JdbcBatchWriter writer <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> JdbcBatchWriter();
+</span></span><span style=display:flex><span>        writer.<span style=color:#a6e22e>setDataSource</span>(dataSource.<span style=color:#a6e22e>getDataSource</span>(<span style=color:#e6db74>&#34;mysql&#34;</span>));
+</span></span><span style=display:flex><span>        writer.<span style=color:#a6e22e>setScript</span>(<span style=color:#e6db74>&#34;insert into test_demo(test_key, test_value) values(:testKey, :testValue)&#34;</span>);
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 分区器</span>
+</span></span><span style=display:flex><span>        JdbcRownumPartitioner partitioner <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> JdbcRownumPartitioner();
+</span></span><span style=display:flex><span>        partitioner.<span style=color:#a6e22e>setTotal</span>(reader.<span style=color:#a6e22e>getCount</span>());
+</span></span><span style=display:flex><span>        partitioner.<span style=color:#a6e22e>setPageSize</span>(10L);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> StepBuilder(<span style=color:#e6db74>&#34;testPartStep&#34;</span>, jobRepository)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>allowStartIfComplete</span>(<span style=color:#66d9ef>true</span>)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>partitioner</span>(<span style=color:#e6db74>&#34;testPart&#34;</span>, partitioner)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>step</span>(createStep(reader, processor, writer))
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Step <span style=color:#a6e22e>createStep</span>(ItemReader<span style=color:#f92672>&lt;</span>Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;&gt;</span> reader, ItemProcessor<span style=color:#f92672>&lt;</span>Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;</span>, Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;&gt;</span> processor, ItemWriter<span style=color:#f92672>&lt;</span>Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;&gt;</span> writer) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>new</span> StepBuilder(<span style=color:#e6db74>&#34;testStep&#34;</span>, jobRepository)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>allowStartIfComplete</span>(<span style=color:#66d9ef>true</span>)
+</span></span><span style=display:flex><span>                .<span style=color:#f92672>&lt;</span>Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;</span>, Map<span style=color:#f92672>&lt;</span>String, Object<span style=color:#f92672>&gt;&gt;</span>chunk(10, transactionManager)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>reader</span>(reader)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>processor</span>(processor)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>writer</span>(writer)
+</span></span><span style=display:flex><span>                .<span style=color:#a6e22e>build</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>这里有一个必须改的结构问题：<strong><code>reader</code>、<code>writer</code> 是 <code>new</code> 出来的单实例，却被所有分区共用</strong>。分区执行时框架会派生多个 <code>StepExecution</code> 并行跑同一个 step 定义，如果 reader 是同一个对象，各线程的 <code>results</code>、游标位置会互相覆盖，表现就是「数据重复或丢失、条数对不上」。这正是 3.3 那句线程安全提示的具体成因。</p><p>正确做法是让每个分区拿到自己的 reader 实例——把它声明成 step 作用域或 prototype：</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@StepScope</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> JdbcPartitionReader <span style=color:#a6e22e>partitionReader</span>(
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>@Value</span>(<span style=color:#e6db74>&#34;#{stepExecutionContext[startRow]}&#34;</span>) Integer startRow,
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>@Value</span>(<span style=color:#e6db74>&#34;#{stepExecutionContext[pageSize]}&#34;</span>) Long pageSize,
+</span></span><span style=display:flex><span>        DynamicRoutingDataSource dataSource) {
+</span></span><span style=display:flex><span>    JdbcPartitionReader reader <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> JdbcPartitionReader();
+</span></span><span style=display:flex><span>    reader.<span style=color:#a6e22e>setDataSource</span>(dataSource.<span style=color:#a6e22e>getDataSource</span>(<span style=color:#e6db74>&#34;postgres&#34;</span>));
+</span></span><span style=display:flex><span>    reader.<span style=color:#a6e22e>setScript</span>(<span style=color:#e6db74>&#34;select test_key, test_value from test_demo&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> reader;
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>@StepScope</code>（本质是 prototype 加 SpEL 代理）会在每个分区 Step 打开时创建新实例，<code>StepRuntimeData</code> 里的 context 也就是该分区独有的；<code>startRow</code> 与 <code>pageSize</code> 直接从分区 context 注入，不再依赖 setter 赋值。</p><p>其余几处细节：</p><ul><li><code>partitioner.setTotal(reader.getCount())</code>：此刻 reader 还没 <code>open</code>，<code>getCount()</code> 依赖一次独立的 <code>count(*)</code> 查询；如果它返回 0，所有分区都不会建立，任务会「成功但没搬数据」。</li><li><code>partitioner.setPageSize(10L)</code> 覆盖了默认的 5000，与内层 <code>chunk(10, ...)</code> 同值——此时每个分区只有一个 chunk，分区的意义只剩下并行调度，可以按实际数据量重新配比。</li><li><code>allowStartIfComplete(true)</code>：允许重跑已完成的 Step。它与 <code>committingInterval</code>、restart 语义叠加后容易让同一批数据被写两遍，配合下面的 <code>insert</code> 语句会产生重复行；要么改用 <code>insert ... on duplicate key update</code>，要么保证 <code>JobParameters</code> 唯一。</li></ul><blockquote><p><code>DynamicRoutingDataSource</code> 是 baomidou 的动态多数据源框架，用于指定作业读取及输出的数据源。</p></blockquote><h3 id=37-作业执行>3.7 作业执行</h3><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@SpringBootTest</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ApplicationTests</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Autowired</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> JobLauncher jobLauncher;
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Autowired</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> Job job;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Test</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>loadContext</span>() <span style=color:#66d9ef>throws</span> Exception {
+</span></span><span style=display:flex><span>        jobLauncher.<span style=color:#a6e22e>run</span>(job, <span style=color:#66d9ef>new</span> JobParameters());
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p><code>jobLauncher.run</code> 默认同步阻塞，测试里这样最直接。定时任务里如果希望触发后立即返回，可换成 <code>AsyncJobLauncher</code>（配 <code>TaskExecutor</code>），但此时 <code>JobExecution</code> 的状态不能再同步读取，进度要改为查元数据表或走监听器上报。</p><h2 id=4-小结>4 小结</h2><ul><li>用 Spring Batch 换取四件事：可重启、有运行记录、分块事务、可并行分区；成本是要维护元数据表。</li><li>Chunk 与 Tasklet 分别对应「海量数据循环」和「一次性动作」，不要混用。</li><li><code>JobParameters</code> 决定能否重跑，空参数会让第二次运行直接失败。</li><li>分区并行最容易翻车的地方是 reader/writer 实例被多分区共用，必须用 <code>@StepScope</code> 隔离。</li><li>写出环节要么真批量（<code>batchUpdate</code>），要么显式失败，静默跳过是最坏的选择。</li></ul><h2 id=5-延伸阅读>5 延伸阅读</h2><ul><li>元数据表与数据源所在的服务端部署：<a href=/posts/ops/ops18>MySQL 安装</a></li><li>从批处理走向流式处理：<a href=/posts/dev/dev4>Spring 整合 Kafka</a></li></ul></article><div class=post-copyright><div class=copyright-cc-box><i class="anzhiyufont anzhiyu-icon-copyright"></i></div><div class=post-copyright__author_box><a class=post-copyright__author_img href=/blog/ title=头像><img class=post-copyright__author_img_back src=/blog/img/avatar.png alt=头像>
+<img class=post-copyright__author_img_front src=/blog/img/avatar.png alt=头像></a><div class=post-copyright__author_name>strr0</div><div class=post-copyright__author_desc>一个热爱前端与生活的博客</div></div><div class=post-copyright__post__info><a class=post-copyright__original href=/blog/posts/dev/dev11/ title=该文章为原创文章，注意版权协议>原创</a>
+<a class=post-copyright-title href=/blog/posts/dev/dev11/><span>Spring Batch 批处理框架</span></a></div><div class=post-copyright__notice><span class=post-copyright-info>本博客所有文章除特别声明外，均采用 <a href=https://creativecommons.org/licenses/by/4.0/ target=_blank rel="noopener external nofollow">CC BY 4.0</a> 许可协议。转载请注明来自 <a href=https://strr0.github.io/blog/ target=_blank>BLOG</a>！</span></div></div><div class=post-tools-right><div class=tag_share><div class=post-meta__box><div class=post-meta__box__category-list><a class=post-meta__box__categoryes href=/blog/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/><span class=categoryes-punctuation><i class="anzhiyufont anzhiyu-icon-inbox"></i></span>后端开发<span class=categoryesPageCount>17</span></a></div><div class=post-meta__box__tag-list><a class=post-meta__box__tags href=/blog/tags/java/><span class=tags-punctuation><i class="anzhiyufont anzhiyu-icon-tag"></i></span>Java<span class=tagsPageCount>19</span></a>
+<a class=post-meta__box__tags href=/blog/tags/spring-batch/><span class=tags-punctuation><i class="anzhiyufont anzhiyu-icon-tag"></i></span>Spring Batch<span class=tagsPageCount>1</span></a></div></div></div></div><div class=relatedPosts><div class=headline><i class="anzhiyufont anzhiyu-icon-thumbs-up"></i><span>喜欢这篇文章的人也看了</span></div><div class=relatedPosts-list><div><a href=/blog/posts/ops/ops17/ title="数据库版本管理工具 Liquibase"><img class=cover src=/blog/img/cover1.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-12-31</div><div class=title>数据库版本管理工具 Liquibase</div></div></a></div><div><a href=/blog/posts/dev/dev17/ title="基于 MyBatis-Plus 插件实现字段填充"><img class=cover src=/blog/img/cover1.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-12-29</div><div class=title>基于 MyBatis-Plus 插件实现字段填充</div></div></a></div><div><a href=/blog/posts/dev/dev16/ title="Spring 整合 OAuth 2.0"><img class=cover src=/blog/img/cover2.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-12-21</div><div class=title>Spring 整合 OAuth 2.0</div></div></a></div><div><a href=/blog/posts/ops/ops15/ title="Maven 打包配置"><img class=cover src=/blog/img/default_cover.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-10-17</div><div class=title>Maven 打包配置</div></div></a></div><div><a href=/blog/posts/dev/dev15/ title="Spring 整合 Minio"><img class=cover src=/blog/img/cover2.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-10-12</div><div class=title>Spring 整合 Minio</div></div></a></div><div><a href=/blog/posts/dev/dev14/ title=树结构工具类封装><img class=cover src=/blog/img/cover1.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-10-01</div><div class=title>树结构工具类封装</div></div></a></div></div></div></div><div id=aside-content class=aside-content><div class="card-widget card-info"><div class=card-content><div class=author-info__sayhi id=author-info__sayhi onclick=changeSayHelloText()></div><div class=author-info-avatar><img class=avatar-img src=/blog/img/avatar.png alt=avatar onerror='this.onerror=null,this.src="/blog/img/friend_404.gif"'></div><div class=author-info__description>欢迎来到 strr0 的小站，相信你可以在这里找到对你有用的知识和教程。</div><div class=author-info__bottom-group><a class=author-info__bottom-group-left href=/blog/><h1 class=author-info__name>strr0</h1><div class=author-info__desc>一个热爱前端与生活的博客</div></a><div class="card-info-social-icons is-center"><a class=social-icon href=https://space.bilibili.com/271642327 title=bilibili target=_blank rel="noopener external nofollow"><i class="anzhiyufont anzhiyu-icon-bilibili"></i>
+</a><a class=social-icon href=https://github.com/strr0 title=github target=_blank rel="noopener external nofollow"><i class="anzhiyufont anzhiyu-icon-github"></i></a></div></div></div></div><script>window.authorStatusSkills=["📢 分享与热心帮助","🏠 智能家居小能手","🎨 设计开发一条龙","🤝 专修交互与设计","🏃 脚踏实地行动派","🧰 团队小组发动机"]</script><div class="card-widget card-notification"><div class=card-content><div class=item-headline><i class="anzhiyufont anzhiyu-icon-bullhorn"></i><span>公告</span></div><div class=announcement-content>欢迎来看我的博客鸭~</div></div></div><div class=sticky_layout><div class=card-widget id=card-toc><div class=item-headline><i class="anzhiyufont anzhiyu-icon-bars"></i>
+<span>文章目录</span>
+<span class=toc-percentage></span></div><div class=toc-content><nav id=TableOfContents><ul><li><a href=#1-概述>1 概述</a></li><li><a href=#2-核心概念>2 核心概念</a><ul><li><a href=#21-job-配置>2.1 Job 配置</a></li><li><a href=#22-step-配置>2.2 Step 配置</a></li><li><a href=#23-并行-step-配置>2.3 并行 Step 配置</a></li><li><a href=#24-作业执行>2.4 作业执行</a></li></ul></li><li><a href=#3-实战数据清洗作业>3 实战：数据清洗作业</a><ul><li><a href=#31-项目配置>3.1 项目配置</a></li><li><a href=#32-定义分区器>3.2 定义分区器</a></li><li><a href=#33-定义读取器>3.3 定义读取器</a></li><li><a href=#34-定义数据处理器>3.4 定义数据处理器</a></li><li><a href=#35-定义数据输出器>3.5 定义数据输出器</a></li><li><a href=#36-作业主体配置>3.6 作业主体配置</a></li><li><a href=#37-作业执行>3.7 作业执行</a></li></ul></li><li><a href=#4-小结>4 小结</a></li><li><a href=#5-延伸阅读>5 延伸阅读</a></li></ul></nav></div></div><div class="card-widget card-recent-post"><div class=item-headline><i class="anzhiyufont anzhiyu-icon-history"></i>
+<span>最近发布</span></div><div class=aside-list><div class=aside-list-item><a class=thumbnail href=/blog/posts/other/other13/ title="NixOS 安装教程"><img src=/blog/img/default_cover.jpg alt="NixOS 安装教程"></a><div class=content><a class=title href=/blog/posts/other/other13/ title="NixOS 安装教程">NixOS 安装教程</a>
+<time datetime=2026-10-19T10:00:00+08:00 title="发表于 2026-10-19">2026-10-19</time></div></div><div class=aside-list-item><a class=thumbnail href=/blog/posts/other/other8/ title="三星 note2 刷入 PostmarketOS 系统"><img src=/blog/img/cover1.jpg alt="三星 note2 刷入 PostmarketOS 系统"></a><div class=content><a class=title href=/blog/posts/other/other8/ title="三星 note2 刷入 PostmarketOS 系统">三星 note2 刷入 PostmarketOS 系统</a>
+<time datetime=2026-09-04T10:00:00+08:00 title="发表于 2026-09-04">2026-09-04</time></div></div><div class=aside-list-item><a class=thumbnail href=/blog/posts/ops/ops20/ title="Linux 环境下 Canal 的安装与使用"><img src=/blog/img/default_cover.jpg alt="Linux 环境下 Canal 的安装与使用"></a><div class=content><a class=title href=/blog/posts/ops/ops20/ title="Linux 环境下 Canal 的安装与使用">Linux 环境下 Canal 的安装与使用</a>
+<time datetime=2025-05-27T10:00:00+08:00 title="发表于 2025-05-27">2025-05-27</time></div></div><div class=aside-list-item><a class=thumbnail href=/blog/posts/ops/ops19/ title="Linux 环境下 Hadoop 的安装与使用"><img src=/blog/img/default_cover.jpg alt="Linux 环境下 Hadoop 的安装与使用"></a><div class=content><a class=title href=/blog/posts/ops/ops19/ title="Linux 环境下 Hadoop 的安装与使用">Linux 环境下 Hadoop 的安装与使用</a>
+<time datetime=2025-05-20T15:00:00+08:00 title="发表于 2025-05-20">2025-05-20</time></div></div><div class=aside-list-item><a class=thumbnail href=/blog/posts/other/other12/ title="一加 6T 刷入 Windows 及 Linux 等系统"><img src=/blog/img/cover2.jpg alt="一加 6T 刷入 Windows 及 Linux 等系统"></a><div class=content><a class=title href=/blog/posts/other/other12/ title="一加 6T 刷入 Windows 及 Linux 等系统">一加 6T 刷入 Windows 及 Linux 等系统</a>
+<time datetime=2025-02-09T14:00:00+08:00 title="发表于 2025-02-09">2025-02-09</time></div></div></div></div></div></div></div></main><footer id=footer><div id=footer-wrap><div id=footer_deal><a class=deal_link href=https://space.bilibili.com/271642327 title=bilibili target=_blank rel=noopener><i class="anzhiyufont anzhiyu-icon-bilibili"></i>
+</a><img class=footer_mini_logo title=返回顶部 alt=返回顶部 onclick=scrollToTop() src=/blog/img/avatar.png size=50px>
+<a class=deal_link href=https://github.com/strr0 title=github target=_blank rel=noopener><i class="anzhiyufont anzhiyu-icon-github"></i></a></div></div><div id=footer-bar><div class=footer-bar-links><div class=footer-bar-left><div id=footer-bar-tips><span class=copyright>&copy;2022 - 2026 By
+<a class=footer-bar-link href=/blog/ title=strr0>strr0</a></span></div><span id=footer-type-tips>=> ️ ️已挑选52篇文章呈上，可供品读</span></div><div class=footer-bar-right><a class=footer-bar-link href=https://github.com/strr0/hugo-theme-butterfly title="Butterfly 主题文档">Butterfly 主题文档</a>
+<a class=footer-bar-link href=https://strr0.github.io title=网址导航>网址导航</a>
+<a class=footer-bar-link href=https://github.com/strr0/hugo-theme-butterfly target=_blank rel=noopener title=主题：Butterfly>主题 Butterfly</a></div></div></div></footer><div id=rightside><div class=rightside-item id=mobile-toc-button title=目录 onclick=toggleToc(this)><i class="anzhiyufont anzhiyu-icon-list-ul"></i></div><div class=rightside-item id=toggle-mode title=切换深色/浅色模式 onclick=switchTheme()><i class="anzhiyufont anzhiyu-icon-moon"></i></div><div class=rightside-item id=toTop-button title=返回顶部 onclick=scrollToTop()><i class="anzhiyufont anzhiyu-icon-arrow-up"></i></div></div><div id=local-search><div class=search-dialog><nav class=search-nav><span class=search-dialog-title>搜索</span>
+<button class=search-close-button type=button aria-label=关闭搜索框>
+<i class="anzhiyufont anzhiyu-icon-xmark"></i></button></nav><div class=search-wrap><div class=search-input-container><i class="anzhiyufont anzhiyu-icon-magnifying-glass search-icon"></i>
+<input id=search-input class=search-input type=text placeholder="输入关键字，按 Enter 搜索"></div><div class=search-tips id=search-tips><span>按 Esc 关闭</span>
+<span>·</span>
+<span>按 Ctrl/⌘ + K 打开</span></div><div id=loading-database class=search-loading><div class=search-loading-spinner></div><div class=search-loading-text>数据库加载中</div></div><div id=local-search-results></div></div></div><div id=search-mask></div></div></div><script src=/blog/js/butterfly.min.9b4a3def665bd833dd9f8b2427b58c4a290f94a81ace74f53ad390c55e576954.js defer></script><script>window.localSearchConfig={author:"strr0",path:"/blog/search.json",preload:!0,root:"https://strr0.github.io/blog/"}</script><script src=/blog/js/local-search.min.300d01cbb5d0cefbd9618be77e2e68b88d576173d6f3b00d9a9e818133c74012.js defer></script></body></html>

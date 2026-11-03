@@ -1,0 +1,457 @@
+<!doctype html><html lang=zh-cn data-theme=light><head><meta charset=UTF-8><meta http-equiv=X-UA-Compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1,user-scalable=no"><title>Spring Cloud 实战 | BLOG</title><meta name=author content="strr0"><meta name=keywords content="Java,Spring Cloud,微服务"><meta name=description content="Spring Cloud 全套组件的落地实录：Config 配置中心（含 {cipher} 加解密）、Eureka 注册中心与三种服务发现方式、Hystrix 三种弹性模式、Zuul 路由与过滤器、Stream 事件驱动、Sleuth + Zipkin 分布式跟踪，并标注各组件在当前版本线的替代品。"><meta name=theme-color content="#ffffff"><link rel=icon-shortcut href=/img/siteicon/favicon.ico><script>(function(){var e=localStorage.getItem("theme"),t=window.matchMedia("(prefers-color-scheme: dark)").matches,n=e||(t?"dark":"light");document.documentElement.setAttribute("data-theme",n)})()</script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/anzhiyu-theme-static@1.1.9/icon/ali_iconfont_css.css><link rel=stylesheet href=/blog/css/butterfly.min.7a222a8728f954839a16d1fb1118a695403810e72ecac48571779d5eaa11066a.css><script>var butterflyConfig={subtitleLines:'["生活明朗，万物可爱","人间值得，未来可期","欢迎来到 strr0 的小站~"]',siteStartTime:'"2022-01-04"'},postList=["/blog/posts/other/other13/","/blog/posts/other/other8/","/blog/posts/ops/ops20/","/blog/posts/ops/ops19/","/blog/posts/other/other12/","/blog/posts/other/other11/","/blog/posts/ops/ops18/","/blog/posts/ops/ops17/","/blog/posts/dev/dev17/","/blog/posts/other/other10/","/blog/posts/ops/ops16/","/blog/posts/other/other9/","/blog/posts/dev/dev16/","/blog/posts/ops/ops1/","/blog/posts/ops/ops6/","/blog/posts/ops/ops12/","/blog/posts/other/other7/","/blog/posts/other/other5/","/blog/posts/other/other6/","/blog/posts/ops/ops15/","/blog/posts/dev/dev15/","/blog/posts/dev/dev14/","/blog/posts/ops/ops14/","/blog/posts/dev/dev13/","/blog/posts/ops/ops13/","/blog/posts/dev/dev12/","/blog/posts/dev/dev11/","/blog/posts/dev/dev10/","/blog/posts/ops/ops5/","/blog/posts/dev/dev9/","/blog/posts/ops/ops11/","/blog/posts/dev/dev3/","/blog/posts/dev/dev8/","/blog/posts/dev/dev7/","/blog/posts/ops/ops10/","/blog/posts/ops/ops9/","/blog/posts/ops/ops8/","/blog/posts/ops/ops7/","/blog/posts/other/other4/","/blog/posts/dev/dev6/","/blog/posts/dev/dev5/","/blog/posts/dev/dev4/","/blog/posts/other/other3/","/blog/posts/other/other2/","/blog/posts/ops/ops4/","/blog/posts/ops/ops3/","/blog/posts/ops/ops2/","/blog/posts/other/other1/","/blog/posts/dev/dev2/","/blog/posts/aa/aa1/","/blog/posts/ode/ode1/","/blog/posts/dev/dev1/"]</script></head><body data-type=butterfly><div id=web_bg></div><div id=body-wrap class=post><header id=page-header class=post-bg><nav id=nav><span id=nav-group><span id=blog_name><a id=site-name href=/blog/ accesskey=h title=回到首页><i class="anzhiyufont anzhiyu-icon-house-chimney"></i><div class=title>BLOG</div></a></span><div id=page-name-mask><div id=page-name-container onclick=scrollToTop() title=返回顶部><span class=page-name>Spring Cloud 实战</span></div></div><div id=menus><div class=menus_items><div class=menus_item><a class=site-page href=/blog/posts/><i class="anzhiyufont anzhiyu-icon-box-archive"></i>
+<span>文章</span></a></div><div class=menus_item><a class=site-page href=/blog/categories/><i class="anzhiyufont anzhiyu-icon-shapes"></i>
+<span>分类</span></a></div><div class=menus_item><a class=site-page href=/blog/tags/><i class="anzhiyufont anzhiyu-icon-tags"></i>
+<span>标签</span></a></div><div class=menus_item><a class=site-page href=/blog/about/><i class="anzhiyufont anzhiyu-icon-paper-plane"></i>
+<span>关于</span></a></div></div></div><div id=nav-right><div class=nav-button id=random-post-button><a class=site-page href=javascript:void(0); onclick=toRandomPost() title=随机前往一篇文章 accesskey=r><i class="anzhiyufont anzhiyu-icon-dice"></i></a></div><div class=nav-button id=search-button><a class="site-page social-icon search" href=javascript:void(0); title=站内搜索 accesskey=s><i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i>
+<span>搜索</span></a></div><div class=nav-button id=nav-totop><a class="site-page totopbtn" href=javascript:void(0); onclick=scrollToTop()><span id=percent>0</span>
+<i class="anzhiyufont anzhiyu-icon-arrow-up"></i></a></div><div id=toggle-menu><a class=site-page href=javascript:void(0); title=查看菜单><i class="anzhiyufont anzhiyu-icon-bars"></i></a></div></div></span></nav><div id=post-info><div id=post-firstinfo><div class=meta-firstline><a class=post-meta-original>原创</a>
+<span class=post-meta-categories><span class=post-meta-separator></span>
+<i class="anzhiyufont anzhiyu-icon-inbox post-meta-icon"></i>
+<a class=post-meta-categories href=/blog/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/>后端开发</a>
+</span><span class="article-meta tags"><a class=article-meta__tags href=/blog/tags/java/><span><i class="anzhiyufont anzhiyu-icon-hashtag"></i>Java</span></a>
+<a class=article-meta__tags href=/blog/tags/spring-cloud/><span><i class="anzhiyufont anzhiyu-icon-hashtag"></i>Spring Cloud</span></a>
+<a class=article-meta__tags href=/blog/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/><span><i class="anzhiyufont anzhiyu-icon-hashtag"></i>微服务</span></a></span></div></div><h1 class=post-title itemprop="name headline">Spring Cloud 实战</h1><div id=post-meta><div class=meta-firstline><span class=post-meta-date><i class="anzhiyufont anzhiyu-icon-calendar-days post-meta-icon"></i>
+<span class=post-meta-label>发表于</span>
+<time itemprop="dateCreated datePublished" datetime=2022-01-04T20:30:00+08:00 title="发表于 2022-01-04 20:30">2022-01-04</time></span></div><div class=meta-secondline><span class=post-meta-separator></span>
+<span class=post-meta-wordcount><i class="anzhiyufont anzhiyu-icon-file-word post-meta-icon" title=文章字数></i>
+<span class=post-meta-label title=文章字数>字数:</span>
+<span class=word-count title=文章字数>1392</span>
+<span class=post-meta-separator></span>
+<i class="anzhiyufont anzhiyu-icon-clock post-meta-icon" title=阅读时长></i>
+<span class=post-meta-label title=阅读时长>阅读时长:</span>
+<span>7分</span></span></div></div></div><div id=post-top-cover><img id=post-top-bg src=/blog/img/cover1.jpg alt=封面></div></header><main id=blog-container><div id=content-inner class=layout><div id=post><article id=article-container class=post-content><header><a class=post-meta-categories href=/blog/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/>后端开发</a>
+<a class=post-tag-link href=/blog/tags/java/ tabindex=-1>Java</a>
+<a class=post-tag-link href=/blog/tags/spring-cloud/ tabindex=-1>Spring Cloud</a>
+<a class=post-tag-link href=/blog/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/ tabindex=-1>微服务</a><h1 id=CrawlerTitle>Spring Cloud 实战</h1><span class=post-crawler-author>strr0</span>
+<time datetime=2022-01-04T20:30:00+08:00>2022-01-04</time></header><h2 id=概述>概述</h2><p>单体应用长到一定程度，一次发布影响全部功能、一个慢接口拖垮整个进程，此时才需要把服务按业务能力拆开。微服务不是一套框架，而是一组必须由基础设施兜住的能力：配置怎么下发、服务怎么互相找到、下游挂了怎么办、请求从哪里进入、一次调用跨了哪些服务。</p><p>本文按这五个问题依次落地，涉及的角色如下：</p><table><thead><tr><th style=text-align:left>能力</th><th style=text-align:left>本文组件</th><th style=text-align:left>当前版本线的替代品</th></tr></thead><tbody><tr><td style=text-align:left>配置中心</td><td style=text-align:left>Spring Cloud Config</td><td style=text-align:left>Nacos、Apollo</td></tr><tr><td style=text-align:left>注册与发现</td><td style=text-align:left>Netflix Eureka</td><td style=text-align:left>Nacos、Consul</td></tr><tr><td style=text-align:left>服务调用</td><td style=text-align:left>RestTemplate / Feign</td><td style=text-align:left>OpenFeign（不变）</td></tr><tr><td style=text-align:left>容错</td><td style=text-align:left>Netflix Hystrix</td><td style=text-align:left>Resilience4j、Sentinel</td></tr><tr><td style=text-align:left>网关</td><td style=text-align:left>Netflix Zuul 1</td><td style=text-align:left>Spring Cloud Gateway</td></tr><tr><td style=text-align:left>事件驱动</td><td style=text-align:left>Spring Cloud Stream + Kafka</td><td style=text-align:left>同（编程模型改为函数式）</td></tr><tr><td style=text-align:left>链路跟踪</td><td style=text-align:left>Spring Sleuth + Zipkin</td><td style=text-align:left>Micrometer Tracing + Zipkin</td></tr></tbody></table><p>阅读时需要留意一个前提：文中依赖版本是 Spring Boot 2.4.0 / Spring Cloud 2020.0.0，Hystrix、Zuul 1、Sleuth 在 Netflix 停止维护后已被移出官方支持列表，因此第 4、5、8 节保留了当年的写法，并在每节末尾给出迁移方向。概念层面（断路器、舱壁、前置/后置过滤器、traceId 透传）至今仍然适用。</p><h2 id=1-依赖说明>1 依赖说明</h2><table><thead><tr><th>依赖</th><th>版本</th></tr></thead><tbody><tr><td>Spring Boot</td><td>2.4.0</td></tr><tr><td>Spring Cloud</td><td>2020.0.0</td></tr></tbody></table><h2 id=2-配置中心>2 配置中心</h2><h3 id=21-配置中心配置>2.1 配置中心配置</h3><h4 id=211-服务端>2.1.1 服务端</h4><p>依赖配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-config<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-config-server<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>application 配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>server</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>port</span>: <span style=color:#ae81ff>8888</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>spring</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>profiles</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>active</span>: <span style=color:#ae81ff>native</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>cloud</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>config</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>server</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>native</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>search-locations</span>: <span style=color:#ae81ff>classpath:config/licensingservice   </span> <span style=color:#75715e># 多个可使用 &#39;,&#39; 隔开</span>
+</span></span></code></pre></div><p>启动类</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@SpringBootApplication</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@EnableConfigServer</span>    <span style=color:#75715e>// 开启配置中心服务</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ConfigServerApplication</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>main</span>(String<span style=color:#f92672>[]</span> args) {
+</span></span><span style=display:flex><span>        SpringApplication.<span style=color:#a6e22e>run</span>(ConfigServerApplication.<span style=color:#a6e22e>class</span>, args);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>启动后访问 <code>http://localhost:8888/&lt;service>/default</code> 可查看服务配置</p><p>完整的路径规则是 <code>/{application}/{profile}[/{label}]</code>，因此 <code>licensingservice</code> 对应的文件名为 <code>licensingservice.yml</code> 或 <code>licensingservice-default.yml</code>。<code>profiles.active: native</code> 是把本地 classpath 当作配置仓库（不走 Git），好处是零依赖、坏处是配置与 jar 一起发布，只能用于演示或内部工具。</p><h4 id=212-配置中心客户端>2.1.2 配置中心客户端</h4><p>依赖配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-config<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-config-client<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>&lt;!-- 开启 bootstrap 配置 --&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-bootstrap<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>bootstrap 配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>spring</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>application</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>licensingservice</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>profiles</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>active</span>: <span style=color:#ae81ff>default</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>cloud</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>config</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>uri</span>: <span style=color:#ae81ff>http://localhost:8888</span>
+</span></span></code></pre></div><p>启动类</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@SpringBootApplication</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@RefreshScope</span>    <span style=color:#75715e>// 开启配置刷新，访问 refresh 可刷新</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>Application</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>main</span>(String<span style=color:#f92672>[]</span> args) {
+</span></span><span style=display:flex><span>        SpringApplication.<span style=color:#a6e22e>run</span>(Application.<span style=color:#a6e22e>class</span>, args);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>客户端的配置优先级高于本地 <code>application.yml</code>，但只覆盖两边同名的项，客户端独有的配置依旧生效。</p><p>关于 <code>@RefreshScope</code>：标在启动类上并不是推荐用法。刷新作用域靠代理实现，需要哪个 Bean 的属性支持热刷新就标哪个；标在启动类上会让该类 <code>@Bean</code> 方法产出的基础设施对象也进入刷新作用域，容易引发代理相关的异常。另外访问 <code>/refresh</code> 端点需要引入 <code>spring-boot-starter-actuator</code> 并在 <code>management.endpoints.web.exposure.include</code> 中暴露 <code>refresh</code>，且它只重新绑定属性，不会重建连接池。</p><h3 id=22-配置中心加密配置>2.2 配置中心加密配置</h3><h4 id=221-环境配置>2.2.1 环境配置</h4><p>下载无长度限制的 <a href=http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html>jce_policy-8</a></p><p>解压并替换 jre/secret 下的同名文件</p><blockquote><p>这一步已经过时：JDK 8u161 及以后版本默认开启无限强度加密策略，无需再下载 JCE 扩展包，文中链接指向的 Oracle 旧地址也已失效。只有环境仍在用早期 JDK 8 时才需要手动替换。</p></blockquote><h4 id=222-服务端配置>2.2.2 服务端配置</h4><p>application 配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>server</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>port</span>: <span style=color:#ae81ff>8888</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>spring</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>profiles</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>active</span>: <span style=color:#ae81ff>native</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>cloud</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>config</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>server</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>encrypt</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>enabled</span>: <span style=color:#66d9ef>false</span>    <span style=color:#75715e># 关闭加解密配置（服务端不处理密文）</span>
+</span></span><span style=display:flex><span>        <span style=color:#f92672>native</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>search-locations</span>: <span style=color:#ae81ff>classpath:config/licensingservice</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># ENCRYPT_KEY</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>encrypt</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>key</span>: <span style=color:#ae81ff>&lt;secret&gt;</span>
+</span></span></code></pre></div><p>重启服务端</p><p>服务端检测到 <code>ENCRYPT_KEY</code> 配置，会开启接口 /encrypt （加密）和 /decrypt （解密）</p><p>通过加密接口对敏感数据加密，如数据库密码</p><p>将加密数据写入客户端配置，如数据库密码</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-properties data-lang=properties><span style=display:flex><span><span style=color:#a6e22e>spring.datasource.password</span><span style=color:#f92672>:</span> <span style=color:#e6db74>&#34;{cipher}xxxxxx&#34;    # xxxxxx 为加密数据</span>
+</span></span></code></pre></div><p>这里的两个开关很容易配错：<code>spring.cloud.config.server.encrypt.enabled: false</code> 的含义是<strong>服务端不解密</strong>，把 <code>{cipher}</code> 密文原样返回给客户端，由客户端自己用同一个 <code>encrypt.key</code> 解密；若把它设为 <code>true</code>，密文会在服务端解密后再明文出现在响应里，此时客户端反而不需要 <code>spring-security-rsa</code>。两种模式都要求 <code>encrypt.key</code> 两端一致，不一致会报 <code>DecryptionException: Unable to decrypt</code>。</p><h4 id=223-客户端配置>2.2.3 客户端配置</h4><p>添加依赖</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.security<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-security-rsa<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>bootstrap 配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>spring</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>application</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>licensingservice</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>profiles</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>active</span>: <span style=color:#ae81ff>default</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>cloud</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>config</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>uri</span>: <span style=color:#ae81ff>http://localhost:8888</span>
+</span></span><span style=display:flex><span><span style=color:#75715e># ENCRYPT_KEY</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>encrypt</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>key</span>: <span style=color:#ae81ff>&lt;secret&gt;</span>
+</span></span></code></pre></div><h3 id=23-问题与修复>2.3 问题与修复</h3><h4 id=bootstrap-配置无效>bootstrap 配置无效</h4><p>由于 Spring Cloud 2020 版配置中心的改动导致 bootstrap 配置无效，需添加 bootstrap 依赖开启配置，新版本获取配置如下</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>spring</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>application</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>name</span>: <span style=color:#ae81ff>licensingservice</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>config</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>import</span>: <span style=color:#ae81ff>optional:configserver:http://localhost:8888</span>
+</span></span></code></pre></div><h2 id=3-服务注册与发现>3 服务注册与发现</h2><h3 id=31-注册中心配置>3.1 注册中心配置</h3><h4 id=311-服务端>3.1.1 服务端</h4><p>依赖配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-netflix-eureka-server<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>application 配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>server</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>port</span>: <span style=color:#ae81ff>8761</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>eureka</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>client</span>:
+</span></span><span style=display:flex><span>    <span style=color:#75715e># eureka注册</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>register-with-eureka</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e># 本地缓存</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>fetch-registry</span>: <span style=color:#66d9ef>false</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>server</span>:
+</span></span><span style=display:flex><span>    <span style=color:#75715e># 等待时间</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>wait-time-in-ms-when-sync-empty</span>: <span style=color:#ae81ff>5</span>
+</span></span></code></pre></div><p>启动类</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@SpringBootApplication</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@EnableEurekaServer</span>    <span style=color:#75715e>// 开启注册中心服务</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>EurekaServerApplication</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>static</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>main</span>(String<span style=color:#f92672>[]</span> args) {
+</span></span><span style=display:flex><span>        SpringApplication.<span style=color:#a6e22e>run</span>(EurekaServerApplication.<span style=color:#a6e22e>class</span>, args);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>启动后访问 <a href=http://localhost:8761/eureka/apps>http://localhost:8761/eureka/apps</a> 可查看所有已注册服务</p><h4 id=312-客户端>3.1.2 客户端</h4><p>依赖配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-netflix-eureka-client<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>&lt;!-- 远程服务调用 --&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-openfeign<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>application 配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>eureka</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>instance</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>prefer-ip-address</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>client</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>register-with-eureka</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>fetch-registry</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>service-url</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>defaultZone</span>: <span style=color:#ae81ff>http://localhost:8761/eureka</span>
+</span></span></code></pre></div><p>启动后可访问注册中心服务端接口，查看是否成功注册</p><p>客户端三行的含义：<code>register-with-eureka</code> 把自己注册到中心，<code>fetch-registry</code> 拉一份服务列表到本地（Feign / LoadBalancer 靠这份本地缓存寻址，所以即使只当服务方也要开），<code>prefer-ip-address: true</code> 让注册的是 IP 而不是主机名——容器与跨网段环境下主机名经常解不了。</p><p>服务端配置里的两个 <code>false</code> 表示既不注册也不拉取，这是单机 Eureka 的标准写法；集群部署时它们要改成 <code>true</code>，并在 <code>defaultZone</code> 里互相指向对方。</p><h3 id=32-服务发现>3.2 服务发现</h3><h4 id=321-discoveryclient-方式>3.2.1 DiscoveryClient 方式</h4><p>通过 DiscoveryClient 获取服务实例进行访问（需要在启动类上添加 @EnableDiscoveryClient 注解开启服务发现）</p><blockquote><p>该注解在当前的自动配置体系下已非必需，引入 Eureka Client 依赖就会开启服务发现；注解本身可用于显式声明意图，或在多注册中心场景下控制开关。</p></blockquote><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Component</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>OrganizationDiscoveryClient</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> DiscoveryClient discoveryClient;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Autowired</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>OrganizationDiscoveryClient</span>(DiscoveryClient discoveryClient) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>discoveryClient</span> <span style=color:#f92672>=</span> discoveryClient;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Organization <span style=color:#a6e22e>getOrganization</span>(String organizationId) {
+</span></span><span style=display:flex><span>        RestTemplate restTemplate <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> RestTemplate();
+</span></span><span style=display:flex><span>        List<span style=color:#f92672>&lt;</span>ServiceInstance<span style=color:#f92672>&gt;</span> instances <span style=color:#f92672>=</span> discoveryClient.<span style=color:#a6e22e>getInstances</span>(<span style=color:#e6db74>&#34;organizationservice&#34;</span>);    <span style=color:#75715e>// organizationservice 为服务名称</span>
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (instances.<span style=color:#a6e22e>isEmpty</span>()) {
+</span></span><span style=display:flex><span>            <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        String serviceUri <span style=color:#f92672>=</span> String.<span style=color:#a6e22e>format</span>(<span style=color:#e6db74>&#34;%s/v1/organizations/%s&#34;</span>, instances.<span style=color:#a6e22e>get</span>(0).<span style=color:#a6e22e>getUri</span>().<span style=color:#a6e22e>toString</span>(), organizationId);
+</span></span><span style=display:flex><span>        ResponseEntity<span style=color:#f92672>&lt;</span>Organization<span style=color:#f92672>&gt;</span> exchange <span style=color:#f92672>=</span> restTemplate.<span style=color:#a6e22e>exchange</span>(serviceUri, HttpMethod.<span style=color:#a6e22e>GET</span>, <span style=color:#66d9ef>null</span>, Organization.<span style=color:#a6e22e>class</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> exchange.<span style=color:#a6e22e>getBody</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h4 id=322-resttemplate-方式>3.2.2 RestTemplate 方式</h4><p>通过 RestTemplate 访问（需要在 RestTemplate Bean 上添加 @LoadBalanced 告诉 Spring 创建一个支持 Ribbon 的 Bean）</p><blockquote><p>注意措辞修正：Spring Cloud 2019 之后 Ribbon 已进入维护模式，<code>@LoadBalanced</code> 背后默认换成 <code>spring-cloud-starter-loadbalancer</code>。行为一致（把服务名换成实例地址），但配置前缀从 <code>ribbon.*</code> 变成 <code>spring.cloud.loadbalancer.*</code>，自定义策略也不再是实现 <code>IRule</code>，而是用 <code>@LoadBalancerClient</code> 指定自定义的 <code>ReactorLoadBalancer</code> 或替换 <code>ServiceInstanceListSupplier</code>。</p></blockquote><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Component</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>OrganizationRestTemplateClient</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> RestTemplate restTemplate;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Autowired</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>OrganizationRestTemplateClient</span>(RestTemplate restTemplate) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>restTemplate</span> <span style=color:#f92672>=</span> restTemplate;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Organization <span style=color:#a6e22e>getOrganization</span>(String organizationId) {
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// organizationservice 为服务名称</span>
+</span></span><span style=display:flex><span>        ResponseEntity<span style=color:#f92672>&lt;</span>Organization<span style=color:#f92672>&gt;</span> exchange <span style=color:#f92672>=</span> restTemplate.<span style=color:#a6e22e>exchange</span>(<span style=color:#e6db74>&#34;http://organizationservice/v1/organizations/{organizationId}&#34;</span>,
+</span></span><span style=display:flex><span>                HttpMethod.<span style=color:#a6e22e>GET</span>,
+</span></span><span style=display:flex><span>                <span style=color:#66d9ef>null</span>,
+</span></span><span style=display:flex><span>                Organization.<span style=color:#a6e22e>class</span>,
+</span></span><span style=display:flex><span>                organizationId);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> exchange.<span style=color:#a6e22e>getBody</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h4 id=323-feignclient-方式>3.2.3 FeignClient 方式</h4><p>通过 Feign 访问（需要在启动类上添加 @EnableFeignClients 注解开启 Feign）</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@FeignClient</span>(<span style=color:#e6db74>&#34;organizationservice&#34;</span>)    <span style=color:#75715e>// organizationservice 为服务名称</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>OrganizationFeignClient</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@RequestMapping</span>(
+</span></span><span style=display:flex><span>            method <span style=color:#f92672>=</span> RequestMethod.<span style=color:#a6e22e>GET</span>,
+</span></span><span style=display:flex><span>            value <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;/v1/organizations/{organizationId}&#34;</span>,
+</span></span><span style=display:flex><span>            consumes <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;application/json&#34;</span>
+</span></span><span style=display:flex><span>    )
+</span></span><span style=display:flex><span>    Organization <span style=color:#a6e22e>getOrganization</span>(<span style=color:#a6e22e>@PathVariable</span>(<span style=color:#e6db74>&#34;organizationId&#34;</span>) String organizationId);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>三种方式的定位并不相同：</p><table><thead><tr><th style=text-align:left>方式</th><th style=text-align:left>谁选实例</th><th style=text-align:left>是否负载均衡</th><th style=text-align:left>适用</th></tr></thead><tbody><tr><td style=text-align:left>DiscoveryClient</td><td style=text-align:left>开发者自己</td><td style=text-align:left>需自己实现</td><td style=text-align:left>需要按元数据（区域、权重）定制寻址时</td></tr><tr><td style=text-align:left>RestTemplate + <code>@LoadBalanced</code></td><td style=text-align:left>LoadBalancer</td><td style=text-align:left>是</td><td style=text-align:left>已有的 HTTP 代码改造成本最低</td></tr><tr><td style=text-align:left>Feign</td><td style=text-align:left>LoadBalancer</td><td style=text-align:left>是</td><td style=text-align:left>声明式接口，配合容错与拦截器最省事</td></tr></tbody></table><p>前两种还有两个具体缺陷：<code>DiscoveryClient</code> 写法里 <code>new RestTemplate()</code> 每次调用都新建（应作为 Bean 复用，否则连接池不生效），<code>instances.get(0)</code> 永远取第一个实例（不是负载均衡，且实例列表顺序不保证）。</p><h2 id=4-断路器>4 断路器</h2><h3 id=41-断路器配置>4.1 断路器配置</h3><p>由于 Spring Cloud 2020 已移除 Hystrix，更换如下版本</p><table><thead><tr><th>依赖</th><th>版本</th></tr></thead><tbody><tr><td>Spring Boot</td><td>2.3.0.RELEASE</td></tr><tr><td>Spring Cloud</td><td>Hoxton.SR5</td></tr></tbody></table><p>添加依赖</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-netflix-hystrix<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>启动类添加 @EnableCircuitBreaker 注解开启断路器模式</p><blockquote><p>两个补充：一是 <code>randomlyRunLong()</code> 是书中用于模拟偶发慢响应的辅助方法（随机 sleep 超过阈值），实际业务中不存在；二是 Netflix 在 2018 年就把 Hystrix 列入维护模式，Spring Cloud Circuit Breaker 现在以 Resilience4j 为默认实现。本节保留 Hystrix 写法是因为三种弹性模式的概念与它高度对应：<code>@HystrixCommand</code> → <code>@CircuitBreaker</code> + <code>@Retry</code>，<code>fallbackMethod</code> → <code>fallbackMethod</code>（同名同义），<code>threadPoolKey</code> → <code>@Bulkhead</code>。从 Hystrix 迁过去时不必重新理解模型，只需重新对应参数名。</p></blockquote><h3 id=42-三种弹性模式>4.2 三种弹性模式</h3><h4 id=421-断路器模式>4.2.1 断路器模式</h4><p>杀死运行缓慢和退化的系统调用，调用快速失败，防止资源枯竭</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@HystrixCommand</span>(
+</span></span><span style=display:flex><span>        commandProperties <span style=color:#f92672>=</span> {
+</span></span><span style=display:flex><span>                <span style=color:#75715e>// 设置超时</span>
+</span></span><span style=display:flex><span>                <span style=color:#a6e22e>@HystrixProperty</span>(name <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;execution.isolation.thread.timeoutInMilliseconds&#34;</span>, value <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;12000&#34;</span>)
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> List<span style=color:#f92672>&lt;</span>License<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getLicensesByOrg</span>(String organizationId) {
+</span></span><span style=display:flex><span>    randomlyRunLong();
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> licenseRepository.<span style=color:#a6e22e>findByOrganizationId</span>(organizationId);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h4 id=422-回退模式>4.2.2 回退模式</h4><p>调用失败或调用的断路器失败时定义的替代代码路径</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@HystrixCommand</span>(
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 设置回退</span>
+</span></span><span style=display:flex><span>        fallbackMethod <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;buildFallbackLicenseList&#34;</span>,
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> List<span style=color:#f92672>&lt;</span>License<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getLicensesByOrg</span>(String organizationId) {
+</span></span><span style=display:flex><span>    randomlyRunLong();
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> licenseRepository.<span style=color:#a6e22e>findByOrganizationId</span>(organizationId);
+</span></span><span style=display:flex><span>}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>// 回退</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>private</span> List<span style=color:#f92672>&lt;</span>License<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>buildFallbackLicenseList</span>(String organizationId) {
+</span></span><span style=display:flex><span>    List<span style=color:#f92672>&lt;</span>License<span style=color:#f92672>&gt;</span> fallbackList <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> ArrayList<span style=color:#f92672>&lt;&gt;</span>();
+</span></span><span style=display:flex><span>    License license <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> License()
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>withId</span>(<span style=color:#e6db74>&#34;0000000-00-00000&#34;</span>)
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>withOrganizationId</span>( organizationId )
+</span></span><span style=display:flex><span>            .<span style=color:#a6e22e>withProductName</span>(<span style=color:#e6db74>&#34;Sorry no licensing information currently available&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    fallbackList.<span style=color:#a6e22e>add</span>(license);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> fallbackList;
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h4 id=423-舱壁模式>4.2.3 舱壁模式</h4><p>调用隔离在自己的线程池，防止吞噬所有资源</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@HystrixCommand</span>(
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 线程池名称</span>
+</span></span><span style=display:flex><span>        threadPoolKey <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;licenseByOrgThreadPool&#34;</span>,
+</span></span><span style=display:flex><span>        threadPoolProperties <span style=color:#f92672>=</span> {
+</span></span><span style=display:flex><span>                <span style=color:#75715e>// 核心线程数</span>
+</span></span><span style=display:flex><span>                <span style=color:#a6e22e>@HystrixProperty</span>(name <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;coreSize&#34;</span>, value <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;30&#34;</span>),
+</span></span><span style=display:flex><span>                <span style=color:#75715e>// 请求队列</span>
+</span></span><span style=display:flex><span>                <span style=color:#a6e22e>@HystrixProperty</span>(name <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;maxQueueSize&#34;</span>, value <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;10&#34;</span>)
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> List<span style=color:#f92672>&lt;</span>License<span style=color:#f92672>&gt;</span> <span style=color:#a6e22e>getLicensesByOrg</span>(String organizationId) {
+</span></span><span style=display:flex><span>    randomlyRunLong();
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> licenseRepository.<span style=color:#a6e22e>findByOrganizationId</span>(organizationId);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h2 id=5-路由>5 路由</h2><h3 id=51-路由配置>5.1 路由配置</h3><p>依赖配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-config<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-config-client<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-netflix-eureka-client<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-netflix-zuul<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>application 配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>server</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>port</span>: <span style=color:#ae81ff>5555</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>eureka</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>instance</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>prefer-ip-address</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>client</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>register-with-eureka</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>fetch-registry</span>: <span style=color:#66d9ef>true</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>serviceUrl</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>defaultZone</span>: <span style=color:#ae81ff>http://localhost:8761/eureka</span>
+</span></span></code></pre></div><p>启动类添加 @EnableZuulProxy 开启路由</p><p>Zuul 1 的定位是「逆向代理 + 过滤器链」：每个请求依次经过 pre → route → post → error 四类过滤器。它与注册中心直连，靠服务名自动映射路由，因此配置里只需引 eureka client。</p><p>迁移提醒：Zuul 1 是阻塞 IO 模型，每个待请求占一条线程，长连接与 SSE 场景下吞吐上不去；Netflix 之后的 Zuul 2 也未被 Spring Cloud 采纳。Spring Cloud Gateway 基于 WebFlux/Netty 异步模型，概念对应关系为：<code>zuul.routes</code> → <code>routes[].uri/predicates/filters</code>，前置/后置过滤器 → <code>GatewayFilter</code> 与全局 <code>GlobalFilter</code>，<code>ignored-services</code> → 不再自动暴露路由（默认只转发显式声明的 route）。</p><h3 id=52-映射方式>5.2 映射方式</h3><h4 id=521-默认>5.2.1 默认</h4><p>默认情况下，Zuul 会通过服务发现自动映射路由，通过服务名称加接口地址即可访问指定接口</p><h4 id=522-手动映射>5.2.2 手动映射</h4><p>application 添加配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>zuul</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>ignored-services</span>: <span style=color:#e6db74>&#34;*&#34;</span>    <span style=color:#75715e># 忽略服务发现的路由</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>prefix</span>: <span style=color:#ae81ff>/api</span>
+</span></span><span style=display:flex><span>  <span style=color:#f92672>routes</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>organizationservice</span>: <span style=color:#ae81ff>/organization/**   </span> <span style=color:#75715e># 指定前缀转发到对应服务</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>licensingservice</span>: <span style=color:#ae81ff>/licensing/**</span>
+</span></span></code></pre></div><h4 id=523-静态路由映射>5.2.3 静态路由映射</h4><p>application 添加配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>zuul</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>routes</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>licensestatic</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>path</span>: <span style=color:#ae81ff>/licensestatic/**   </span> <span style=color:#75715e># 指定前缀转发到对应地址</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>url</span>: <span style=color:#ae81ff>http://licensestatic:8081</span>
+</span></span></code></pre></div><h3 id=53-过滤器>5.3 过滤器</h3><p>Zuul 有三种过滤器：前置过滤器、后置过滤器、路由过滤器</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Component</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>TrackingFilter</span> <span style=color:#66d9ef>extends</span> ZuulFilter {
+</span></span><span style=display:flex><span>    <span style=color:#75715e>//...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Object <span style=color:#a6e22e>run</span>() <span style=color:#66d9ef>throws</span> ZuulException {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>if</span> (isCorrelationIdPresent()) {
+</span></span><span style=display:flex><span>            System.<span style=color:#a6e22e>out</span>.<span style=color:#a6e22e>println</span>(String.<span style=color:#a6e22e>format</span>(<span style=color:#e6db74>&#34;tmx-correlation-id found in tracking filter: %s. &#34;</span>, filterUtil.<span style=color:#a6e22e>getCorrelationId</span>()));
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>else</span>{
+</span></span><span style=display:flex><span>            filterUtil.<span style=color:#a6e22e>setCorrelationId</span>(generateCorrelationId());
+</span></span><span style=display:flex><span>            System.<span style=color:#a6e22e>out</span>.<span style=color:#a6e22e>println</span>(String.<span style=color:#a6e22e>format</span>(<span style=color:#e6db74>&#34;tmx-correlation-id generated in tracking filter: %s.&#34;</span>, filterUtil.<span style=color:#a6e22e>getCorrelationId</span>()));
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>        System.<span style=color:#a6e22e>out</span>.<span style=color:#a6e22e>println</span>(String.<span style=color:#a6e22e>format</span>(<span style=color:#e6db74>&#34;Processing incoming request for %s.&#34;</span>, filterUtil.<span style=color:#a6e22e>getRequestURI</span>()));
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h2 id=6-微服务安全>6 微服务安全</h2><p>参考 <a href=/posts/dev/dev16>Spring 整合 OAuth 2.0</a></p><p>分工上建议这样切：网关层只做「身份是否合法」（令牌校验、路由级权限、跨域与限流），细粒度资源权限留在业务服务里自己判。把两者都堆到网关会让网关成为全局瓶颈，也让服务无法单独部署。</p><h2 id=7-事件驱动>7 事件驱动</h2><h3 id=71-生产者配置>7.1 生产者配置</h3><p>依赖配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-stream<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-stream-kafka<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>application 配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>spring</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>cloud</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>stream</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>bindings</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>outboundOrgChanges</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>destination</span>:  <span style=color:#ae81ff>orgChangeTopic   </span> <span style=color:#75715e># 绑定 topic</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>content-type</span>: <span style=color:#ae81ff>application/json</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>kafka</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>binder</span>:
+</span></span><span style=display:flex><span>          <span style=color:#75715e># zkNodes: localhost</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>brokers</span>: <span style=color:#ae81ff>localhost:9092</span>
+</span></span></code></pre></div><p>输出管道</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>CustomSource</span> {
+</span></span><span style=display:flex><span>    String OUTPUT <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;outboundOrgChanges&#34;</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Output</span>(OUTPUT)
+</span></span><span style=display:flex><span>    MessageChannel <span style=color:#a6e22e>output</span>();
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>生产者</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Component</span>
+</span></span><span style=display:flex><span><span style=color:#a6e22e>@EnableBinding</span>(CustomSource.<span style=color:#a6e22e>class</span>)
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>SimpleSourceBean</span> {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> CustomSource customSource;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>SimpleSourceBean</span>(CustomSource customSource){
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>customSource</span> <span style=color:#f92672>=</span> customSource;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>publishOrgChange</span>(String action, String orgId){
+</span></span><span style=display:flex><span>        System.<span style=color:#a6e22e>out</span>.<span style=color:#a6e22e>println</span>(String.<span style=color:#a6e22e>format</span>(<span style=color:#e6db74>&#34;Sending Kafka message %s for Organization Id: %s&#34;</span>, action, orgId));
+</span></span><span style=display:flex><span>        OrganizationChangeModel change <span style=color:#f92672>=</span>  <span style=color:#66d9ef>new</span> OrganizationChangeModel(
+</span></span><span style=display:flex><span>                OrganizationChangeModel.<span style=color:#a6e22e>class</span>.<span style=color:#a6e22e>getTypeName</span>(),
+</span></span><span style=display:flex><span>                action,
+</span></span><span style=display:flex><span>                orgId,
+</span></span><span style=display:flex><span>                <span style=color:#e6db74>&#34;CorrelationId&#34;</span>);
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        customSource.<span style=color:#a6e22e>output</span>().<span style=color:#a6e22e>send</span>(MessageBuilder.<span style=color:#a6e22e>withPayload</span>(change).<span style=color:#a6e22e>build</span>());
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h3 id=72-消费者配置>7.2 消费者配置</h3><p>依赖配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-stream<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-stream-kafka<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>application 配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>spring</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>cloud</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>stream</span>:
+</span></span><span style=display:flex><span>      <span style=color:#f92672>bindings</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>inboundOrgChanges</span>:
+</span></span><span style=display:flex><span>          <span style=color:#f92672>destination</span>: <span style=color:#ae81ff>orgChangeTopic   </span> <span style=color:#75715e># 绑定 topic</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>content-type</span>: <span style=color:#ae81ff>application/json</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>group</span>: <span style=color:#ae81ff>licensingGroup</span>
+</span></span><span style=display:flex><span>      <span style=color:#f92672>kafka</span>:
+</span></span><span style=display:flex><span>        <span style=color:#f92672>binder</span>:
+</span></span><span style=display:flex><span>          <span style=color:#75715e># zkNodes: localhost</span>
+</span></span><span style=display:flex><span>          <span style=color:#f92672>brokers</span>: <span style=color:#ae81ff>localhost:9092</span>
+</span></span></code></pre></div><p>输入管道</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>interface</span> <span style=color:#a6e22e>CustomSink</span> {
+</span></span><span style=display:flex><span>    String INPUT <span style=color:#f92672>=</span> <span style=color:#e6db74>&#34;inboundOrgChanges&#34;</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Input</span>(INPUT)
+</span></span><span style=display:flex><span>    SubscribableChannel <span style=color:#a6e22e>input</span>();
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>消费者</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@EnableBinding</span>(CustomSink.<span style=color:#a6e22e>class</span>)
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>OrganizationChangeHandler</span> {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@StreamListener</span>(CustomSink.<span style=color:#a6e22e>INPUT</span>)
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#66d9ef>void</span> <span style=color:#a6e22e>loggerSink</span>(OrganizationChangeModel orgChange) {
+</span></span><span style=display:flex><span>        System.<span style=color:#a6e22e>out</span>.<span style=color:#a6e22e>println</span>(String.<span style=color:#a6e22e>format</span>(<span style=color:#e6db74>&#34;Received a message of type %s&#34;</span>, orgChange.<span style=color:#a6e22e>getType</span>()));
+</span></span><span style=display:flex><span>        <span style=color:#75715e>//...</span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>编程模型提醒：<code>@EnableBinding</code>、<code>@Input</code> / <code>@Output</code>、<code>@StreamListener</code> 这套接口式写法从 Spring Cloud Stream 3.0 起已被标为废弃（官方标记为 maintenance mode），新版推荐函数式模型：生产者声明一个 <code>Supplier&lt;String></code> Bean，消费者声明 <code>Consumer&lt;OrganizationChangeModel></code>，绑定名与 topic 靠 <code>spring.cloud.function.definition</code> 与 <code>spring.cloud.stream.bindings.&lt;函数名>.destination</code> 配置。两个概念没有变（目标 topic、消费组 <code>group</code>、<code>content-type</code>），只是把「接口 + 注解」换成了「函数 + 配置」。另外 <code>group</code> 是必须项：不写 group 时每个实例都会收到全量消息，多实例部署下会造成重复消费。</p><h2 id=8-分布式跟踪>8 分布式跟踪</h2><h3 id=81-服务配置>8.1 服务配置</h3><p>添加依赖</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-sleuth<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-sleuth-zipkin<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>Sleuth 的作用是在入口生成 <code>traceId</code> / <code>spanId</code> 并放进 MDC，同时自动给 RestTemplate、Feign、Zuul、Stream 的调用透传 <code>X-B3-*</code> 头。日志里只要把 <code>%X{traceId}</code> 加入 pattern，一次请求的多服务日志就能串起来。</p><p>application 配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-yml data-lang=yml><span style=display:flex><span><span style=color:#f92672>spring</span>:
+</span></span><span style=display:flex><span>  <span style=color:#f92672>zipkin</span>:
+</span></span><span style=display:flex><span>    <span style=color:#f92672>base-url</span>: <span style=color:#ae81ff>http://localhost:9411</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>discovery-client-enabled</span>: <span style=color:#66d9ef>false</span>
+</span></span></code></pre></div><p>定义 Bean</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Bean</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> Sampler <span style=color:#a6e22e>defaultSampler</span>() {
+</span></span><span style=display:flex><span>    <span style=color:#75715e>// 所有信息输出到 zipkin</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> Sampler.<span style=color:#a6e22e>ALWAYS_SAMPLE</span>;
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><h3 id=82-路由配置>8.2 路由配置</h3><p>添加依赖</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-xml data-lang=xml><span style=display:flex><span><span style=color:#f92672>&lt;dependency&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;groupId&gt;</span>org.springframework.cloud<span style=color:#f92672>&lt;/groupId&gt;</span>
+</span></span><span style=display:flex><span>    <span style=color:#f92672>&lt;artifactId&gt;</span>spring-cloud-starter-sleuth<span style=color:#f92672>&lt;/artifactId&gt;</span>
+</span></span><span style=display:flex><span><span style=color:#f92672>&lt;/dependency&gt;</span>
+</span></span></code></pre></div><p>过滤器配置</p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none><code class=language-java data-lang=java><span style=display:flex><span><span style=color:#a6e22e>@Component</span>
+</span></span><span style=display:flex><span><span style=color:#66d9ef>public</span> <span style=color:#66d9ef>class</span> <span style=color:#a6e22e>ResponseFilter</span> <span style=color:#66d9ef>extends</span> ZuulFilter {
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>private</span> <span style=color:#66d9ef>final</span> Tracer tracer;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> <span style=color:#a6e22e>ResponseFilter</span>(Tracer tracer) {
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>this</span>.<span style=color:#a6e22e>tracer</span> <span style=color:#f92672>=</span> tracer;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#75715e>//...</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>@Override</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>public</span> Object <span style=color:#a6e22e>run</span>() <span style=color:#66d9ef>throws</span> ZuulException {
+</span></span><span style=display:flex><span>        System.<span style=color:#a6e22e>out</span>.<span style=color:#a6e22e>println</span>(String.<span style=color:#a6e22e>format</span>(<span style=color:#e6db74>&#34;Adding the correlation id to the outbound headers. %s&#34;</span>, FilterUtil.<span style=color:#a6e22e>getCorrelationId</span>()));
+</span></span><span style=display:flex><span>        <span style=color:#75715e>// 打印 tracer 信息</span>
+</span></span><span style=display:flex><span>        FilterUtil.<span style=color:#a6e22e>addCorrelationId</span>(tracer.<span style=color:#a6e22e>currentSpan</span>().<span style=color:#a6e22e>toString</span>());
+</span></span><span style=display:flex><span>        System.<span style=color:#a6e22e>out</span>.<span style=color:#a6e22e>println</span>(String.<span style=color:#a6e22e>format</span>(<span style=color:#e6db74>&#34;Completing outgoing request for %s.&#34;</span>, FilterUtil.<span style=color:#a6e22e>getRequestURI</span>()));
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>return</span> <span style=color:#66d9ef>null</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>网关这里的 <code>ResponseFilter</code> 把自定义的 <code>tmx-correlation-id</code> 写回响应头，前端拿着它就能在日志里检索整条链路——这是 Sleuth 的 <code>traceId</code> 之外的业务级跟踪号，两者互补：前者只能服务端内部用，后者可以直接交给报障用户。</p><p>迁移提醒：Spring Boot 3 / Spring Cloud 2022 起 Sleuth 已由 <strong>Micrometer Tracing</strong> 接替（<code>micrometer-tracing-bridge-brave</code> 或 <code>micrometer-tracing-bridge-otel</code>，再配 <code>zipkin-reporter-brave</code> 上报），配置前缀从 <code>spring.sleuth.*</code> 改为 <code>management.tracing.*</code>。两处可见行为也随之变化：MDC 里的键名统一成小写的 <code>traceId</code> / <code>spanId</code>（早期 Sleuth 与原生 Brave 是 <code>X-B3-TraceId</code> / <code>X-B3-SpanId</code>，日志格式要跟着改），跨服务透传的 HTTP 头默认从 <code>X-B3-*</code> 换成 W3C 的 <code>traceparent</code>，需要与旧系统对接时可显式改回 B3 格式。</p><h2 id=9-小结>9 小结</h2><ul><li>微服务的五个问题各自有对应组件，但它们之间是<strong>依赖关系</strong>而不是并列关系：网关依赖注册中心寻址，断路器包裹远程调用，链路跟踪需要所有组件配合透传头部。</li><li>配置中心有两处容易配错：<code>@RefreshScope</code> 应标在具体业务 Bean 上，<code>{cipher}</code> 解密发生在哪一端取决于 <code>server.encrypt.enabled</code>。</li><li>服务发现三种方式中，只有 <code>DiscoveryClient</code> 把选型工作交给开发者，其他两种已自动负载均衡；新代码推荐 Feign。</li><li>断路器、回退、舱壁三个概念不依赖 Hystrix，在 Resilience4j 里一一对应，真正要重做的是参数名与线程池配置。</li><li>事件驱动与链路跟踪都不保证投递与采样，上生产前要先确定至少一次还是至多一次、以及采样率。</li><li>本文的组件选型已整体落后一个时代（Hystrix / Zuul 1 / Ribbon / Sleuth / <code>@EnableBinding</code>），但「配置 - 发现 - 容错 - 网关 - 事件 - 跟踪」这条拆解思路仍然成立。</li></ul><h2 id=10-延伸阅读>10 延伸阅读</h2><ul><li>新一代注册中心与配置中心：<a href=/posts/dev/dev10>Spring 整合 Nacos</a></li><li>令牌与单点登录：<a href=/posts/dev/dev16>Spring 整合 OAuth 2.0</a>、<a href=/posts/dev/dev12>基于 Sa-Token 实现单点登录</a></li><li>直接使用消息中间件（绕过 Stream 抽象）：<a href=/posts/dev/dev4>Spring 整合 Kafka</a></li></ul></article><div class=post-copyright><div class=copyright-cc-box><i class="anzhiyufont anzhiyu-icon-copyright"></i></div><div class=post-copyright__author_box><a class=post-copyright__author_img href=/blog/ title=头像><img class=post-copyright__author_img_back src=/blog/img/avatar.png alt=头像>
+<img class=post-copyright__author_img_front src=/blog/img/avatar.png alt=头像></a><div class=post-copyright__author_name>strr0</div><div class=post-copyright__author_desc>一个热爱前端与生活的博客</div></div><div class=post-copyright__post__info><a class=post-copyright__original href=/blog/posts/dev/dev1/ title=该文章为原创文章，注意版权协议>原创</a>
+<a class=post-copyright-title href=/blog/posts/dev/dev1/><span>Spring Cloud 实战</span></a></div><div class=post-copyright__notice><span class=post-copyright-info>本博客所有文章除特别声明外，均采用 <a href=https://creativecommons.org/licenses/by/4.0/ target=_blank rel="noopener external nofollow">CC BY 4.0</a> 许可协议。转载请注明来自 <a href=https://strr0.github.io/blog/ target=_blank>BLOG</a>！</span></div></div><div class=post-tools-right><div class=tag_share><div class=post-meta__box><div class=post-meta__box__category-list><a class=post-meta__box__categoryes href=/blog/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/><span class=categoryes-punctuation><i class="anzhiyufont anzhiyu-icon-inbox"></i></span>后端开发<span class=categoryesPageCount>17</span></a></div><div class=post-meta__box__tag-list><a class=post-meta__box__tags href=/blog/tags/java/><span class=tags-punctuation><i class="anzhiyufont anzhiyu-icon-tag"></i></span>Java<span class=tagsPageCount>19</span></a>
+<a class=post-meta__box__tags href=/blog/tags/spring-cloud/><span class=tags-punctuation><i class="anzhiyufont anzhiyu-icon-tag"></i></span>Spring Cloud<span class=tagsPageCount>1</span></a>
+<a class=post-meta__box__tags href=/blog/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1/><span class=tags-punctuation><i class="anzhiyufont anzhiyu-icon-tag"></i></span>微服务<span class=tagsPageCount>1</span></a></div></div></div></div><div class=relatedPosts><div class=headline><i class="anzhiyufont anzhiyu-icon-thumbs-up"></i><span>喜欢这篇文章的人也看了</span></div><div class=relatedPosts-list><div><a href=/blog/posts/ops/ops17/ title="数据库版本管理工具 Liquibase"><img class=cover src=/blog/img/cover1.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-12-31</div><div class=title>数据库版本管理工具 Liquibase</div></div></a></div><div><a href=/blog/posts/dev/dev17/ title="基于 MyBatis-Plus 插件实现字段填充"><img class=cover src=/blog/img/cover1.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-12-29</div><div class=title>基于 MyBatis-Plus 插件实现字段填充</div></div></a></div><div><a href=/blog/posts/dev/dev16/ title="Spring 整合 OAuth 2.0"><img class=cover src=/blog/img/cover2.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-12-21</div><div class=title>Spring 整合 OAuth 2.0</div></div></a></div><div><a href=/blog/posts/ops/ops15/ title="Maven 打包配置"><img class=cover src=/blog/img/default_cover.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-10-17</div><div class=title>Maven 打包配置</div></div></a></div><div><a href=/blog/posts/dev/dev15/ title="Spring 整合 Minio"><img class=cover src=/blog/img/cover2.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-10-12</div><div class=title>Spring 整合 Minio</div></div></a></div><div><a href=/blog/posts/dev/dev14/ title=树结构工具类封装><img class=cover src=/blog/img/cover1.jpg alt=cover><div class="content is-center"><div class=date><i class="anzhiyufont anzhiyu-icon-calendar-days fa-fw"></i> 2024-10-01</div><div class=title>树结构工具类封装</div></div></a></div></div></div></div><div id=aside-content class=aside-content><div class="card-widget card-info"><div class=card-content><div class=author-info__sayhi id=author-info__sayhi onclick=changeSayHelloText()></div><div class=author-info-avatar><img class=avatar-img src=/blog/img/avatar.png alt=avatar onerror='this.onerror=null,this.src="/blog/img/friend_404.gif"'></div><div class=author-info__description>欢迎来到 strr0 的小站，相信你可以在这里找到对你有用的知识和教程。</div><div class=author-info__bottom-group><a class=author-info__bottom-group-left href=/blog/><h1 class=author-info__name>strr0</h1><div class=author-info__desc>一个热爱前端与生活的博客</div></a><div class="card-info-social-icons is-center"><a class=social-icon href=https://space.bilibili.com/271642327 title=bilibili target=_blank rel="noopener external nofollow"><i class="anzhiyufont anzhiyu-icon-bilibili"></i>
+</a><a class=social-icon href=https://github.com/strr0 title=github target=_blank rel="noopener external nofollow"><i class="anzhiyufont anzhiyu-icon-github"></i></a></div></div></div></div><script>window.authorStatusSkills=["📢 分享与热心帮助","🏠 智能家居小能手","🎨 设计开发一条龙","🤝 专修交互与设计","🏃 脚踏实地行动派","🧰 团队小组发动机"]</script><div class="card-widget card-notification"><div class=card-content><div class=item-headline><i class="anzhiyufont anzhiyu-icon-bullhorn"></i><span>公告</span></div><div class=announcement-content>欢迎来看我的博客鸭~</div></div></div><div class=sticky_layout><div class=card-widget id=card-toc><div class=item-headline><i class="anzhiyufont anzhiyu-icon-bars"></i>
+<span>文章目录</span>
+<span class=toc-percentage></span></div><div class=toc-content><nav id=TableOfContents><ul><li><a href=#概述>概述</a></li><li><a href=#1-依赖说明>1 依赖说明</a></li><li><a href=#2-配置中心>2 配置中心</a><ul><li><a href=#21-配置中心配置>2.1 配置中心配置</a></li><li><a href=#22-配置中心加密配置>2.2 配置中心加密配置</a></li><li><a href=#23-问题与修复>2.3 问题与修复</a></li></ul></li><li><a href=#3-服务注册与发现>3 服务注册与发现</a><ul><li><a href=#31-注册中心配置>3.1 注册中心配置</a></li><li><a href=#32-服务发现>3.2 服务发现</a></li></ul></li><li><a href=#4-断路器>4 断路器</a><ul><li><a href=#41-断路器配置>4.1 断路器配置</a></li><li><a href=#42-三种弹性模式>4.2 三种弹性模式</a></li></ul></li><li><a href=#5-路由>5 路由</a><ul><li><a href=#51-路由配置>5.1 路由配置</a></li><li><a href=#52-映射方式>5.2 映射方式</a></li><li><a href=#53-过滤器>5.3 过滤器</a></li></ul></li><li><a href=#6-微服务安全>6 微服务安全</a></li><li><a href=#7-事件驱动>7 事件驱动</a><ul><li><a href=#71-生产者配置>7.1 生产者配置</a></li><li><a href=#72-消费者配置>7.2 消费者配置</a></li></ul></li><li><a href=#8-分布式跟踪>8 分布式跟踪</a><ul><li><a href=#81-服务配置>8.1 服务配置</a></li><li><a href=#82-路由配置>8.2 路由配置</a></li></ul></li><li><a href=#9-小结>9 小结</a></li><li><a href=#10-延伸阅读>10 延伸阅读</a></li></ul></nav></div></div><div class="card-widget card-recent-post"><div class=item-headline><i class="anzhiyufont anzhiyu-icon-history"></i>
+<span>最近发布</span></div><div class=aside-list><div class=aside-list-item><a class=thumbnail href=/blog/posts/other/other13/ title="NixOS 安装教程"><img src=/blog/img/default_cover.jpg alt="NixOS 安装教程"></a><div class=content><a class=title href=/blog/posts/other/other13/ title="NixOS 安装教程">NixOS 安装教程</a>
+<time datetime=2026-10-19T10:00:00+08:00 title="发表于 2026-10-19">2026-10-19</time></div></div><div class=aside-list-item><a class=thumbnail href=/blog/posts/other/other8/ title="三星 note2 刷入 PostmarketOS 系统"><img src=/blog/img/cover1.jpg alt="三星 note2 刷入 PostmarketOS 系统"></a><div class=content><a class=title href=/blog/posts/other/other8/ title="三星 note2 刷入 PostmarketOS 系统">三星 note2 刷入 PostmarketOS 系统</a>
+<time datetime=2026-09-04T10:00:00+08:00 title="发表于 2026-09-04">2026-09-04</time></div></div><div class=aside-list-item><a class=thumbnail href=/blog/posts/ops/ops20/ title="Linux 环境下 Canal 的安装与使用"><img src=/blog/img/default_cover.jpg alt="Linux 环境下 Canal 的安装与使用"></a><div class=content><a class=title href=/blog/posts/ops/ops20/ title="Linux 环境下 Canal 的安装与使用">Linux 环境下 Canal 的安装与使用</a>
+<time datetime=2025-05-27T10:00:00+08:00 title="发表于 2025-05-27">2025-05-27</time></div></div><div class=aside-list-item><a class=thumbnail href=/blog/posts/ops/ops19/ title="Linux 环境下 Hadoop 的安装与使用"><img src=/blog/img/default_cover.jpg alt="Linux 环境下 Hadoop 的安装与使用"></a><div class=content><a class=title href=/blog/posts/ops/ops19/ title="Linux 环境下 Hadoop 的安装与使用">Linux 环境下 Hadoop 的安装与使用</a>
+<time datetime=2025-05-20T15:00:00+08:00 title="发表于 2025-05-20">2025-05-20</time></div></div><div class=aside-list-item><a class=thumbnail href=/blog/posts/other/other12/ title="一加 6T 刷入 Windows 及 Linux 等系统"><img src=/blog/img/cover2.jpg alt="一加 6T 刷入 Windows 及 Linux 等系统"></a><div class=content><a class=title href=/blog/posts/other/other12/ title="一加 6T 刷入 Windows 及 Linux 等系统">一加 6T 刷入 Windows 及 Linux 等系统</a>
+<time datetime=2025-02-09T14:00:00+08:00 title="发表于 2025-02-09">2025-02-09</time></div></div></div></div></div></div></div></main><footer id=footer><div id=footer-wrap><div id=footer_deal><a class=deal_link href=https://space.bilibili.com/271642327 title=bilibili target=_blank rel=noopener><i class="anzhiyufont anzhiyu-icon-bilibili"></i>
+</a><img class=footer_mini_logo title=返回顶部 alt=返回顶部 onclick=scrollToTop() src=/blog/img/avatar.png size=50px>
+<a class=deal_link href=https://github.com/strr0 title=github target=_blank rel=noopener><i class="anzhiyufont anzhiyu-icon-github"></i></a></div></div><div id=footer-bar><div class=footer-bar-links><div class=footer-bar-left><div id=footer-bar-tips><span class=copyright>&copy;2022 - 2026 By
+<a class=footer-bar-link href=/blog/ title=strr0>strr0</a></span></div><span id=footer-type-tips>=> ️ ️已挑选52篇文章呈上，可供品读</span></div><div class=footer-bar-right><a class=footer-bar-link href=https://github.com/strr0/hugo-theme-butterfly title="Butterfly 主题文档">Butterfly 主题文档</a>
+<a class=footer-bar-link href=https://strr0.github.io title=网址导航>网址导航</a>
+<a class=footer-bar-link href=https://github.com/strr0/hugo-theme-butterfly target=_blank rel=noopener title=主题：Butterfly>主题 Butterfly</a></div></div></div></footer><div id=rightside><div class=rightside-item id=mobile-toc-button title=目录 onclick=toggleToc(this)><i class="anzhiyufont anzhiyu-icon-list-ul"></i></div><div class=rightside-item id=toggle-mode title=切换深色/浅色模式 onclick=switchTheme()><i class="anzhiyufont anzhiyu-icon-moon"></i></div><div class=rightside-item id=toTop-button title=返回顶部 onclick=scrollToTop()><i class="anzhiyufont anzhiyu-icon-arrow-up"></i></div></div><div id=local-search><div class=search-dialog><nav class=search-nav><span class=search-dialog-title>搜索</span>
+<button class=search-close-button type=button aria-label=关闭搜索框>
+<i class="anzhiyufont anzhiyu-icon-xmark"></i></button></nav><div class=search-wrap><div class=search-input-container><i class="anzhiyufont anzhiyu-icon-magnifying-glass search-icon"></i>
+<input id=search-input class=search-input type=text placeholder="输入关键字，按 Enter 搜索"></div><div class=search-tips id=search-tips><span>按 Esc 关闭</span>
+<span>·</span>
+<span>按 Ctrl/⌘ + K 打开</span></div><div id=loading-database class=search-loading><div class=search-loading-spinner></div><div class=search-loading-text>数据库加载中</div></div><div id=local-search-results></div></div></div><div id=search-mask></div></div></div><script src=/blog/js/butterfly.min.9b4a3def665bd833dd9f8b2427b58c4a290f94a81ace74f53ad390c55e576954.js defer></script><script>window.localSearchConfig={author:"strr0",path:"/blog/search.json",preload:!0,root:"https://strr0.github.io/blog/"}</script><script src=/blog/js/local-search.min.300d01cbb5d0cefbd9618be77e2e68b88d576173d6f3b00d9a9e818133c74012.js defer></script></body></html>
